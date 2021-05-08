@@ -12,7 +12,7 @@ public abstract class HiddenApiRefineExtension {
     public abstract Property<Boolean> getLog();
 
     public HiddenApiRefineExtension() {
-        getPrefixToRemove().set(Collections.singleton("$"));
-        getLog().set(true);
+        getPrefixToRemove().convention(Collections.singleton("$"));
+        getLog().convention(true);
     }
 }
