@@ -1,0 +1,105 @@
+plugins {
+    id('java')
+    id('maven-publish')
+    id('java-gradle-plugin')
+    id('signing')
+}
+
+group = "dev.rikka.tools"
+version = "1.0.0"
+
+def artifactName = "hidden-api-refine"
+def pluginId = "${group}.${artifactName}"
+def pluginClass = "${group}.HiddenApiRefinePlugin"
+
+repositories {
+    mavenCentral()
+    google()
+}
+
+dependencies {
+    compileOnly(gradleApi())
+    compileOnly("com.android.tools.build:gradle:4.2.0")
+    implementation("org.javassist:javassist:3.27.0-GA")
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+gradlePlugin {
+    plugins {
+        create("HiddenApiRefine") {
+            id = pluginId
+            implementationClass = pluginClass
+        }
+    }
+}
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId = project.group.toString()
+            artifactId = artifactName
+            version = project.version.toString()
+
+            afterEvaluate {
+                from(components["java"])
+                artifact javadocJar
+                artifact sourcesJar
+            }
+
+            pom {
+                name.set("HiddenApiRefine")
+                description.set("HiddenApiRefine")
+                url.set("https://github.com/RikkaApps/HiddenApiRefinePlugin")
+                licenses {
+                    license {
+                        name.set("MIT License")
+                        url.set("https://github.com/RikkaApps/HiddenApiRefinePlugin/blob/main/LICENSE")
+                    }
+                }
+                developers {
+                    developer {
+                        name.set("Kr328 & RikkaW")
+                    }
+                }
+                scm {
+                    connection.set("scm:git:https://github.com/RikkaApps/HiddenApiRefinePlugin.git")
+                    url.set("https://github.com/RikkaApps/HiddenApiRefinePlugin")
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            name("ossrh")
+            url("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+            credentials(PasswordCredentials)
+        }
+    }
+}
+
+signing {
+    def signingKey = findProperty("signingKey")
+    def signingPassword = findProperty("signingPassword")
+    def secretKeyRingFile = findProperty("signing.secretKeyRingFile")
+
+    if (secretKeyRingFile != null && file(secretKeyRingFile).exists()) {
+        sign(publishing.publications)
+    } else if (signingKey != null) {
+        useInMemoryPgpKeys(signingKey, signingPassword)
+        sign(publishing.publications)
+    }
+}
