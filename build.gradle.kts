@@ -4,9 +4,12 @@ plugins {
     `java-gradle-plugin`
 }
 
-// TODO: rename group
-group = "org.example"
-version = "4.2.0-01"
+group = "dev.rikka.tools"
+version = "1.0.0"
+
+val artifact = "hidden-api-refine"
+val pluginId = "$group.$artifact"
+val pluginClass = "$group.HiddenApiRefinePlugin"
 
 repositories {
     mavenCentral()
@@ -15,11 +18,7 @@ repositories {
 
 dependencies {
     compileOnly(gradleApi())
-    compileOnly("com.android.tools.build:gradle:4.2.0") {
-        exclude("org.jetbrains.kotlin", "kotlin-stdlib-jdk8")
-        exclude("org.jetbrains.kotlin", "kotlin-stdlib-jdk7")
-        exclude("org.jetbrains.kotlin", "kotlin-reflect")
-    }
+    compileOnly("com.android.tools.build:gradle:4.2.0")
     implementation("org.javassist:javassist:3.27.0-GA")
 }
 
@@ -30,9 +29,9 @@ java {
 
 gradlePlugin {
     plugins {
-        create("class-rename") {
-            id = "class-rename"
-            implementationClass = "$group.ClassRenamePlugin"
+        create(pluginId) {
+            id = pluginId
+            implementationClass = pluginClass
         }
     }
 }
@@ -41,7 +40,7 @@ publishing {
     publications {
         create<MavenPublication>("maven") {
             groupId = project.group.toString()
-            artifactId = "class-rename"
+            artifactId = artifact
             version = project.version.toString()
 
             from(components["java"])

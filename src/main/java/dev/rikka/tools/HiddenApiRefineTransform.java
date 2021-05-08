@@ -1,4 +1,4 @@
-package org.example;
+package dev.rikka.tools;
 
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.Format;
@@ -36,16 +36,16 @@ import java.util.stream.Collectors;
 
 import javassist.bytecode.ClassFile;
 
-public class ClassRenameTransform extends Transform {
+public class HiddenApiRefineTransform extends Transform {
     private final Function<String, String> rename;
 
-    public ClassRenameTransform(Function<String, String> rename) {
+    public HiddenApiRefineTransform(Function<String, String> rename) {
         this.rename = rename;
     }
 
     @Override
     public String getName() {
-        return "ClassRename";
+        return "HiddenApiRefine";
     }
 
     @Override
