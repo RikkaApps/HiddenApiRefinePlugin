@@ -29,7 +29,7 @@ java {
 
 gradlePlugin {
     plugins {
-        create(pluginId) {
+        create("HiddenApiRefine") {
             id = pluginId
             implementationClass = pluginClass
         }

@@ -1,12 +1,12 @@
 package dev.rikka.tools;
 
 import com.android.build.gradle.BaseExtension;
+import com.android.build.gradle.internal.pipeline.TransformTask;
 
 import org.gradle.api.GradleException;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 
-import java.util.List;
 import java.util.function.Function;
 
 @SuppressWarnings("unused")
@@ -21,14 +21,11 @@ public class HiddenApiRefinePlugin implements Plugin<Project> {
         final HiddenApiRefineExtension extension = target.getExtensions()
                 .create("hiddenApiRefine", HiddenApiRefineExtension.class);
 
-        final boolean log = extension.getLog().get();
-        final List<String> prefixToRemove = extension.getPrefixToRemove().get();
-
-        final Function<String, String> rename = (String name) -> prefixToRemove.stream()
+        final Function<String, String> rename = (String name) -> extension.getRefinePrefix().get().stream()
                 .reduce(name, (String n, String p) -> {
                     if (n.startsWith(p)) {
                         String newName = n.substring(p.length());
-                        if (log) {
+                        if (extension.getLog().get()) {
                             System.out.println("Rename class " + n + " to " + newName);
                         }
                         return n.substring(p.length());
@@ -37,5 +34,12 @@ public class HiddenApiRefinePlugin implements Plugin<Project> {
                 });
 
         androidExtension.registerTransform(new HiddenApiRefineTransform(rename));
+
+        target.afterEvaluate(project -> project.getTasks().withType(TransformTask.class).whenTaskAdded(task -> {
+            if (!(task.getTransform() instanceof HiddenApiRefineTransform)) return;
+
+            task.getInputs().property("log", extension.getLog().get());
+            task.getInputs().property("refinePrefix", extension.getRefinePrefix().get());
+        }));
     }
 }

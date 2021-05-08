@@ -7,12 +7,12 @@ import java.util.Collections;
 
 public abstract class HiddenApiRefineExtension {
 
-    public abstract ListProperty<String> getPrefixToRemove();
+    public abstract ListProperty<String> getRefinePrefix();
 
     public abstract Property<Boolean> getLog();
 
     public HiddenApiRefineExtension() {
-        getPrefixToRemove().convention(Collections.singleton("$"));
+        getRefinePrefix().convention(Collections.singleton("$"));
         getLog().convention(true);
     }
 }
