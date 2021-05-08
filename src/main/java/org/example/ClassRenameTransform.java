@@ -1,17 +1,40 @@
 package org.example;
 
-import com.android.build.api.transform.*;
-import javassist.bytecode.ClassFile;
+import com.android.build.api.transform.DirectoryInput;
+import com.android.build.api.transform.Format;
+import com.android.build.api.transform.JarInput;
+import com.android.build.api.transform.QualifiedContent;
+import com.android.build.api.transform.Status;
+import com.android.build.api.transform.Transform;
+import com.android.build.api.transform.TransformInput;
+import com.android.build.api.transform.TransformInvocation;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import java.util.jar.JarOutputStream;
 import java.util.stream.Collectors;
+
+import javassist.bytecode.ClassFile;
 
 public class ClassRenameTransform extends Transform {
     private final Function<String, String> rename;
@@ -46,95 +69,66 @@ public class ClassRenameTransform extends Transform {
         return true;
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    @Override
-    public void transform(TransformInvocation transform) throws IOException {
-        try {
-            if (!transform.isIncremental())
-                transform.getOutputProvider().deleteAll();
+    private void doTransform(TransformInvocation transform) throws IOException {
+        if (!transform.isIncremental())
+            transform.getOutputProvider().deleteAll();
 
-            for (final JarInput inputJar : collectChangedJars(transform)) {
-                final File inputFile = inputJar.getFile();
-                final File outputFile = transform.getOutputProvider()
-                        .getContentLocation(
-                                inputJar.getName(),
-                                inputJar.getContentTypes(),
-                                inputJar.getScopes(),
-                                Format.JAR);
+        for (final JarInput inputJar : collectChangedJars(transform)) {
+            final File inputFile = inputJar.getFile();
+            final File outputFile = transform.getOutputProvider()
+                    .getContentLocation(
+                            inputJar.getName(),
+                            inputJar.getContentTypes(),
+                            inputJar.getScopes(),
+                            Format.JAR);
 
-                if (inputFile == null || !inputFile.exists()) {
-                    outputFile.delete();
+            if (inputFile == null || !inputFile.exists()) {
+                outputFile.delete();
 
-                    continue;
-                }
+                continue;
+            }
 
-                try (final JarInputStream inputStream = new JarInputStream(new FileInputStream(inputFile))) {
-                    try (final JarOutputStream outputStream = new JarOutputStream(new FileOutputStream(outputFile))) {
-                        while (true) {
-                            final JarEntry entry = inputStream.getNextJarEntry();
+            try (final JarInputStream inputStream = new JarInputStream(new FileInputStream(inputFile));
+                 final JarOutputStream outputStream = new JarOutputStream(new FileOutputStream(outputFile))) {
+                while (true) {
+                    final JarEntry entry = inputStream.getNextJarEntry();
 
-                            if (entry == null)
-                                break;
+                    if (entry == null)
+                        break;
 
-                            if (entry.getName().endsWith(".class")) {
-                                final ClassFile file = loadClass(new BufferedInputStream(inputStream));
+                    if (entry.getName().endsWith(".class")) {
+                        final ClassFile file = loadClass(new BufferedInputStream(inputStream));
 
-                                patchClass(file);
+                        patchClass(file);
 
-                                outputStream.putNextEntry(new JarEntry(file.getName().replace('.', '/') + ".class"));
+                        outputStream.putNextEntry(new JarEntry(file.getName().replace('.', '/') + ".class"));
 
-                                final BufferedOutputStream out = new BufferedOutputStream(outputStream);
+                        final BufferedOutputStream out = new BufferedOutputStream(outputStream);
 
-                                file.write(new DataOutputStream(out));
+                        file.write(new DataOutputStream(out));
 
-                                out.flush();
-                            } else {
-                                outputStream.putNextEntry(new JarEntry(entry.getName()));
+                        out.flush();
+                    } else {
+                        outputStream.putNextEntry(new JarEntry(entry.getName()));
 
-                                copy(inputStream, outputStream);
-                            }
-                        }
+                        copy(inputStream, outputStream);
                     }
                 }
             }
+        }
 
-            for (final TransformInput input : transform.getInputs()) {
-                for (final DirectoryInput directory : input.getDirectoryInputs()) {
-                    for (final Map.Entry<File, String> entry : collectChangedFiles(directory, transform.isIncremental()).entrySet()) {
-                        final File outputDir = transform.getOutputProvider().getContentLocation(
-                                directory.getName(),
-                                directory.getContentTypes(),
-                                directory.getScopes(),
-                                Format.DIRECTORY
-                        );
+        for (final TransformInput input : transform.getInputs()) {
+            for (final DirectoryInput directory : input.getDirectoryInputs()) {
+                for (final Map.Entry<File, String> entry : collectChangedFiles(directory, transform.isIncremental()).entrySet()) {
+                    final File outputDir = transform.getOutputProvider().getContentLocation(
+                            directory.getName(),
+                            directory.getContentTypes(),
+                            directory.getScopes(),
+                            Format.DIRECTORY
+                    );
 
-                        if (!entry.getKey().getName().endsWith(".class")) {
-                            final File outputFile = new File(outputDir, entry.getValue());
-
-                            if (!entry.getKey().exists()) {
-                                outputFile.delete();
-
-                                continue;
-                            }
-
-                            outputFile.getParentFile().mkdirs();
-
-                            try (final FileInputStream inputStream = new FileInputStream(entry.getKey())) {
-                                try (final FileOutputStream outputStream = new FileOutputStream(outputFile)) {
-                                    copy(inputStream, outputStream);
-                                }
-                            }
-
-                            continue;
-                        }
-
-                        final String className = entry.getValue()
-                                .substring(0, entry.getValue().length() - ".class".length())
-                                .replace(File.separatorChar, '/');
-                        final String renamed = rename.apply(className)
-                                .replace('/', File.separatorChar) + ".class";
-
-                        final File outputFile = new File(outputDir, renamed);
+                    if (!entry.getKey().getName().endsWith(".class")) {
+                        final File outputFile = new File(outputDir, entry.getValue());
 
                         if (!entry.getKey().exists()) {
                             outputFile.delete();
@@ -142,22 +136,54 @@ public class ClassRenameTransform extends Transform {
                             continue;
                         }
 
-                        final ClassFile file;
-
-                        try (final FileInputStream stream = new FileInputStream(entry.getKey())) {
-                            file = loadClass(new BufferedInputStream(stream));
-                        }
-
-                        patchClass(file);
-
                         outputFile.getParentFile().mkdirs();
 
-                        try (final BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(outputFile))) {
-                            file.write(new DataOutputStream(stream));
+                        try (final FileInputStream inputStream = new FileInputStream(entry.getKey())) {
+                            try (final FileOutputStream outputStream = new FileOutputStream(outputFile)) {
+                                copy(inputStream, outputStream);
+                            }
                         }
+
+                        continue;
+                    }
+
+                    final String className = entry.getValue()
+                            .substring(0, entry.getValue().length() - ".class".length())
+                            .replace(File.separatorChar, '/');
+                    final String renamed = rename.apply(className)
+                            .replace('/', File.separatorChar) + ".class";
+
+                    final File outputFile = new File(outputDir, renamed);
+
+                    if (!entry.getKey().exists()) {
+                        outputFile.delete();
+
+                        continue;
+                    }
+
+                    final ClassFile file;
+
+                    try (final FileInputStream stream = new FileInputStream(entry.getKey())) {
+                        file = loadClass(new BufferedInputStream(stream));
+                    }
+
+                    patchClass(file);
+
+                    outputFile.getParentFile().mkdirs();
+
+                    try (final BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(outputFile))) {
+                        file.write(new DataOutputStream(stream));
                     }
                 }
             }
+        }
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @Override
+    public void transform(TransformInvocation transform) throws IOException {
+        try {
+            doTransform(transform);
         } catch (IOException e) {
             e.printStackTrace();
 
