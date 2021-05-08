@@ -1,11 +1,12 @@
 plugins {
     java
     `maven-publish`
+    `java-gradle-plugin`
 }
 
 // TODO: rename group
 group = "org.example"
-version = "4.1.3-01"
+version = "4.2.0-01"
 
 repositories {
     mavenCentral()
@@ -13,7 +14,8 @@ repositories {
 }
 
 dependencies {
-    implementation("com.android.tools.build:gradle:4.1.3") {
+    compileOnly(gradleApi())
+    compileOnly("com.android.tools.build:gradle:4.2.0") {
         exclude("org.jetbrains.kotlin", "kotlin-stdlib-jdk8")
         exclude("org.jetbrains.kotlin", "kotlin-stdlib-jdk7")
         exclude("org.jetbrains.kotlin", "kotlin-reflect")
@@ -24,6 +26,15 @@ dependencies {
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+gradlePlugin {
+    plugins {
+        create("class-rename") {
+            id = "class-rename"
+            implementationClass = "$group.ClassRenamePlugin"
+        }
+    }
 }
 
 publishing {
