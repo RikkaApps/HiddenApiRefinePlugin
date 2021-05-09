@@ -20,6 +20,8 @@ This plugin is to solve these problems.
 
 This plugin uses the Transform API of the Android Gradle Plugin to create a transform that removes specific prefixes from class names. So we can add a special prefix (e.g., `'$'`) to stub classes, and all the problems will be gone and the stub module does not need to be a Java-only module.
 
+The idea is from [@Kr328](https://github.com/Kr328).
+
 ## Usage
 
 Root project:
