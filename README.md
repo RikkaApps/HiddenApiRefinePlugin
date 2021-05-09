@@ -12,7 +12,7 @@ However the linking way, or "the stub way", have some problems:
 
 1. "Bridge classes" is required if only some members of the class are hidden.
 2. Kotlin will try to link public classes from the stub module, `implementation` a second Java-only which `compileOnly` the stub module can workaround the problem.
-3. Interface implementation will be removed by R8 if the stub module is not `compileOnly` directly from the main module, this will cause problem 2.
+3. Interface implementation will be removed by R8 if the stub module is not `compileOnly` directly from the main module, however doing this will bring back problem 2.
 
 This plugin is to solve these problems.
 
