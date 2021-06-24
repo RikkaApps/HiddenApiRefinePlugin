@@ -24,7 +24,7 @@ The idea is from [@Kr328](https://github.com/Kr328).
 
 ## Usage
 
-Root project:
+### Root project
 
 ```gradle
 buildscript {
@@ -37,7 +37,7 @@ buildscript {
 }
 ```
 
-Module:
+### Module
 
 ```gradle
 plugins {
@@ -50,4 +50,51 @@ hiddenApiRefine {
     // Print log, default is true
     log = true
 }
+```
+
+Note, the plugin is to remove the prefix of the package name, not the class name. For example, the `$` in `com.example.$Example` will not be removed.
+
+### Use "hidden" classes with public classes
+
+Sometimes we need to use "hidden" classes with public classes.
+
+For example, use the hidden `android.os.UserHandle#of` method to create an instance of `UserHandle`.
+
+```
+package $android.os;
+
+public class UserHandle {
+    public static UserHandle ALL;
+
+    public static UserHandle of(int userId) {
+        throw new RuntimeException();
+    }
+}
+```
+
+```
+$android.os.UserHandle userHandle = $android.os.UserHandle.of(userId);
+```
+
+However, this `UserHandle` cannot be passed to other public APIs that accepts `UserHandle`. This is because this `UserHandle` is actually `$android.os.UserHandle` rather than `android.os.UserHandle`.
+
+This can be simply solved with this "trick".
+
+```
+public class Unsafe {
+    @SuppressWarnings("unchecked")
+    public static <T> T unsafeCast(Object object) {
+        return (T) object;
+    }
+}
+```
+
+```
+UserHandle userHandle = Unsafe.unsafeCast($android.os.UserHandle.of(userId));
+```
+
+After R8, this "cast" will be "removed" or "inlined". This line will be identical to a normal method call.
+
+```
+UserHandle userHandle = android.os.UserHandle.of(userId);
 ```
