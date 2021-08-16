@@ -32,12 +32,12 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'dev.rikka.tools:hidden-api-refine:1.0.0'
+        classpath 'dev.rikka.tools:hidden-api-refine:1.1.0'
     }
 }
 ```
 
-### Module
+### Module (Use in the final Android app module)
 
 ```gradle
 plugins {
