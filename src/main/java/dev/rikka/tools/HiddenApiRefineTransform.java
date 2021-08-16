@@ -58,8 +58,7 @@ public class HiddenApiRefineTransform extends Transform {
         return new HashSet<>(
                 Arrays.asList(
                         QualifiedContent.Scope.PROJECT,
-                        QualifiedContent.Scope.SUB_PROJECTS,
-                        QualifiedContent.Scope.EXTERNAL_LIBRARIES
+                        QualifiedContent.Scope.SUB_PROJECTS
                 )
         );
     }
