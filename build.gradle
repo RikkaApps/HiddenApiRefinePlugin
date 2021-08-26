@@ -19,13 +19,14 @@ repositories {
 
 dependencies {
     compileOnly(gradleApi())
-    compileOnly("com.android.tools.build:gradle:4.2.0")
-    implementation("org.javassist:javassist:3.27.0-GA")
+    compileOnly("com.android.tools.build:gradle:7.0.0")
+    implementation("org.ow2.asm:asm:9.2")
+    implementation("com.google.code.gson:gson:2.8.8")
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
 }
 
 gradlePlugin {

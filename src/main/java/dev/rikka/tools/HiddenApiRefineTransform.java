@@ -1,41 +1,19 @@
 package dev.rikka.tools;
 
-import com.android.build.api.transform.DirectoryInput;
-import com.android.build.api.transform.Format;
-import com.android.build.api.transform.JarInput;
-import com.android.build.api.transform.QualifiedContent;
-import com.android.build.api.transform.Status;
-import com.android.build.api.transform.Transform;
-import com.android.build.api.transform.TransformInput;
-import com.android.build.api.transform.TransformInvocation;
+import com.android.build.api.transform.*;
+import com.android.build.api.transform.QualifiedContent.Scope;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import java.util.jar.JarOutputStream;
 import java.util.stream.Collectors;
 
-import javassist.bytecode.ClassFile;
-
+@SuppressWarnings("deprecation")
 public class HiddenApiRefineTransform extends Transform {
     private final Function<String, String> rename;
 
@@ -54,17 +32,22 @@ public class HiddenApiRefineTransform extends Transform {
     }
 
     @Override
-    public Set<? super QualifiedContent.Scope> getScopes() {
-        return new HashSet<>(
-                Arrays.asList(
-                        QualifiedContent.Scope.PROJECT,
-                        QualifiedContent.Scope.SUB_PROJECTS
-                )
-        );
+    public Set<? super Scope> getScopes() {
+        return Set.of(Scope.PROJECT, Scope.SUB_PROJECTS);
+    }
+
+    @Override
+    public Set<? super Scope> getReferencedScopes() {
+        return Set.of(Scope.PROJECT, Scope.SUB_PROJECTS, Scope.EXTERNAL_LIBRARIES, Scope.PROVIDED_ONLY);
     }
 
     @Override
     public boolean isIncremental() {
+        return true;
+    }
+
+    @Override
+    public boolean isCacheable() {
         return true;
     }
 
@@ -96,17 +79,17 @@ public class HiddenApiRefineTransform extends Transform {
                         break;
 
                     if (entry.getName().endsWith(".class")) {
-                        final ClassFile file = loadClass(new BufferedInputStream(inputStream));
-
-                        patchClass(file);
-
-                        outputStream.putNextEntry(new JarEntry(file.getName().replace('.', '/') + ".class"));
-
-                        final BufferedOutputStream out = new BufferedOutputStream(outputStream);
-
-                        file.write(new DataOutputStream(out));
-
-                        out.flush();
+//                        final ClassFile file = loadClass(new BufferedInputStream(inputStream));
+//
+//                        patchClass(file);
+//
+//                        outputStream.putNextEntry(new JarEntry(file.getName().replace('.', '/') + ".class"));
+//
+//                        final BufferedOutputStream out = new BufferedOutputStream(outputStream);
+//
+//                        file.write(new DataOutputStream(out));
+//
+//                        out.flush();
                     } else {
                         outputStream.putNextEntry(new JarEntry(entry.getName()));
 
@@ -160,25 +143,24 @@ public class HiddenApiRefineTransform extends Transform {
                         continue;
                     }
 
-                    final ClassFile file;
-
-                    try (final FileInputStream stream = new FileInputStream(entry.getKey())) {
-                        file = loadClass(new BufferedInputStream(stream));
-                    }
-
-                    patchClass(file);
-
-                    outputFile.getParentFile().mkdirs();
-
-                    try (final BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(outputFile))) {
-                        file.write(new DataOutputStream(stream));
-                    }
+//                    final ClassFile file;
+//
+//                    try (final FileInputStream stream = new FileInputStream(entry.getKey())) {
+//                        file = loadClass(new BufferedInputStream(stream));
+//                    }
+//
+//                    patchClass(file);
+//
+//                    outputFile.getParentFile().mkdirs();
+//
+//                    try (final BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(outputFile))) {
+//                        file.write(new DataOutputStream(stream));
+//                    }
                 }
             }
         }
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     @Override
     public void transform(TransformInvocation transform) throws IOException {
         try {
@@ -232,21 +214,25 @@ public class HiddenApiRefineTransform extends Transform {
         return result;
     }
 
-    private ClassFile loadClass(BufferedInputStream stream) throws IOException {
-        return new ClassFile(new DataInputStream(stream));
-    }
-
-    private void patchClass(ClassFile file) {
-        final HashMap<String, String> replacedName = new HashMap<>();
-
-        file.getConstPool().getClassNames().forEach((name) -> {
-            replacedName.put(name, rename.apply(name));
-        });
-
-        file.renameClass(replacedName);
-
-        file.setName(rename.apply(file.getName()));
-    }
+//    private ClassFile loadClass(BufferedInputStream stream) throws IOException {
+//        return new ClassFile(new DataInputStream(stream));
+//    }
+//
+//    private void patchClass(ClassFile file) {
+//        final HashMap<String, String> replacedName = new HashMap<>();
+//
+//        file.getConstPool().getClassNames().forEach((name) -> {
+//            replacedName.put(name, rename.apply(name));
+//        });
+//
+//        file.renameClass(replacedName);
+//
+//        file.setName(rename.apply(file.getName()));
+//
+//        for (MethodInfo method : file.getMethods()) {
+//            method.getCodeAttribute()
+//        }
+//    }
 
     private void copy(InputStream input, OutputStream output) throws IOException {
         final byte[] buffer = new byte[4096];
