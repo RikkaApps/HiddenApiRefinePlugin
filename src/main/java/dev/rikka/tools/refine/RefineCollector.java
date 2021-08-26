@@ -32,7 +32,7 @@ public class RefineCollector extends ClassVisitor {
     @Override
     public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
         if (ANNOTATION_REFINE_AS_DESCRIPTOR.equals(descriptor)) {
-            return new AnnotationVisitor(Opcodes.ASM9) {
+            return new AnnotationVisitor(Opcodes.ASM9, super.visitAnnotation(descriptor, visible)) {
                 @Override
                 public void visit(String name, Object value) {
                     if (ANNOTATION_DEFAULT_VALUE.equals(name) && value instanceof Type) {
@@ -42,16 +42,16 @@ public class RefineCollector extends ClassVisitor {
             };
         }
 
-        return null;
+        return super.visitAnnotation(descriptor, visible);
     }
 
     @Override
     public MethodVisitor visitMethod(int access, String methodName, String methodDescriptor, String signature, String[] exceptions) {
-        return new MethodVisitor(Opcodes.ASM9) {
+        return new MethodVisitor(Opcodes.ASM9, super.visitMethod(access, methodName, methodDescriptor, signature, exceptions)) {
             @Override
             public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
                 if (ANNOTATION_REFINE_NAME_DESCRIPTOR.equals(descriptor)) {
-                    return new AnnotationVisitor(Opcodes.ASM9) {
+                    return new AnnotationVisitor(Opcodes.ASM9, super.visitAnnotation(descriptor, visible)) {
                         @Override
                         public void visit(String name, Object value) {
                             if (ANNOTATION_DEFAULT_VALUE.equals(name) && value instanceof String) {
@@ -61,8 +61,30 @@ public class RefineCollector extends ClassVisitor {
                     };
                 }
 
-                return null;
-            };
+                return super.visitAnnotation(descriptor, visible);
+            }
+
+        };
+    }
+
+    @Override
+    public FieldVisitor visitField(int access, String fieldName, String fieldDescriptor, String signature, Object value) {
+        return new FieldVisitor(Opcodes.ASM9, super.visitField(access, fieldName, fieldDescriptor, signature, value)) {
+            @Override
+            public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
+                if (ANNOTATION_REFINE_NAME_DESCRIPTOR.equals(descriptor)) {
+                    return new AnnotationVisitor(Opcodes.ASM9, super.visitAnnotation(descriptor, visible)) {
+                        @Override
+                        public void visit(String name, Object value) {
+                            if (ANNOTATION_DEFAULT_VALUE.equals(name) && value instanceof String) {
+                                memberReplacement.put(String.format(FORMAT_FIELD_KEY, fieldName, fieldDescriptor), (String) value);
+                            }
+                        }
+                    };
+                }
+
+                return super.visitAnnotation(descriptor, visible);
+            }
         };
     }
 }
