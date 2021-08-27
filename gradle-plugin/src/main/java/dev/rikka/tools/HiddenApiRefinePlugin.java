@@ -7,7 +7,6 @@ import org.gradle.api.Project;
 
 @SuppressWarnings("unused")
 public class HiddenApiRefinePlugin implements Plugin<Project> {
-
     @Override
     public void apply(Project target) {
         BaseExtension androidExtension = target.getExtensions().findByType(BaseExtension.class);

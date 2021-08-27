@@ -1,16 +1,19 @@
+import java.net.URI
+
 plugins {
-    id('java')
-    id('maven-publish')
-    id('java-gradle-plugin')
-    id('signing')
+    java
+    signing
+    `maven-publish`
+    `java-gradle-plugin`
 }
 
-group = "dev.rikka.tools"
-version = "1.2.0"
+group = extra["group"]!!
+version = extra["version"]!!
 
-def artifactName = "hidden-api-refine"
-def pluginId = "${group}.${artifactName}"
-def pluginClass = "${group}.HiddenApiRefinePlugin"
+val artifactPrefix: String by extra
+val artifactName = "$artifactPrefix-gradle-plugin"
+val pluginId = "$group.$artifactName"
+val pluginClass = "$group.HiddenApiRefinePlugin"
 
 repositories {
     mavenCentral()
@@ -19,7 +22,8 @@ repositories {
 
 dependencies {
     compileOnly(gradleApi())
-    compileOnly("com.android.tools.build:gradle:7.0.0")
+    compileOnly("com.android.tools.build:gradle:7.0.1")
+    implementation(project(":annotation"))
     implementation("org.ow2.asm:asm:9.2")
     implementation("com.google.code.gson:gson:2.8.8")
 }
@@ -38,28 +42,27 @@ gradlePlugin {
     }
 }
 
-task javadocJar(type: Jar) {
-    classifier = 'javadoc'
-    from javadoc
+task("javadocJar", type = Jar::class) {
+    archiveClassifier.set("javadoc")
+    from(tasks["javadoc"])
 }
 
-task sourcesJar(type: Jar) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
+task("sourcesJar", type = Jar::class) {
+    archiveClassifier.set("sources")
+    from(sourceSets.main.get().allSource)
 }
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
-            groupId = project.group.toString()
+        create("maven", type = MavenPublication::class) {
+            group = project.group.toString()
             artifactId = artifactName
             version = project.version.toString()
 
-            afterEvaluate {
-                from(components["java"])
-                artifact javadocJar
-                artifact sourcesJar
-            }
+            from(components["java"])
+
+            artifact(tasks["javadocJar"])
+            artifact(tasks["sourcesJar"])
 
             pom {
                 name.set("HiddenApiRefine")
@@ -84,18 +87,19 @@ publishing {
         }
     }
     repositories {
+        mavenLocal()
         maven {
-            name("ossrh")
-            url("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-            credentials(PasswordCredentials)
+            name = "ossrh"
+            url = URI("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2")
+            credentials(PasswordCredentials::class.java)
         }
     }
 }
 
 signing {
-    def signingKey = findProperty("signingKey")
-    def signingPassword = findProperty("signingPassword")
-    def secretKeyRingFile = findProperty("signing.secretKeyRingFile")
+    val signingKey = findProperty("signingKey") as? String
+    val signingPassword = findProperty("signingPassword") as? String
+    val secretKeyRingFile = findProperty("signing.secretKeyRingFile") as? String
 
     if (secretKeyRingFile != null && file(secretKeyRingFile).exists()) {
         sign(publishing.publications)

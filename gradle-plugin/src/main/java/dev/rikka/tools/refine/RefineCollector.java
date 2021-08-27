@@ -12,21 +12,23 @@ public class RefineCollector extends ClassVisitor {
     private static final String ANNOTATION_REFINE_NAME_DESCRIPTOR = Type.getDescriptor(RefineName.class);
     private static final String ANNOTATION_DEFAULT_VALUE = "value";
 
-    private String originalClassName;
-    private String replacedClassName;
+    private String originalClassName = "";
+    private String replacedClassName = "";
     private final HashMap<String, String> memberReplacement = new HashMap<>();
 
     public RefineCollector() {
         super(Opcodes.ASM9);
     }
 
-    public Refine collect() {
-        return new Refine(originalClassName, replacedClassName, memberReplacement);
+    public RefineClass collect() {
+        return new RefineClass(originalClassName, replacedClassName, memberReplacement);
     }
 
     @Override
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
         originalClassName = name;
+
+        super.visit(version, access, name, signature, superName, interfaces);
     }
 
     @Override

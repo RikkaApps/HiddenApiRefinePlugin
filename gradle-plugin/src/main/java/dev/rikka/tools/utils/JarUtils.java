@@ -7,7 +7,7 @@ import java.io.InputStream;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
-public final class Jar {
+public final class JarUtils {
     public interface Visitor {
         void visit(JarEntry entry, InputStream stream) throws IOException;
     }

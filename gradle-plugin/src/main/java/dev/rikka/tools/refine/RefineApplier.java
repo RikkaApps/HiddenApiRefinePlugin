@@ -7,9 +7,9 @@ import org.objectweb.asm.Opcodes;
 import java.util.Map;
 
 public class RefineApplier extends ClassVisitor {
-    private final Map<String, Refine> refines;
+    private final Map<String, RefineClass> refines;
 
-    public RefineApplier(Map<String, Refine> refines, ClassVisitor parent) {
+    public RefineApplier(Map<String, RefineClass> refines, ClassVisitor parent) {
         super(Opcodes.ASM9, parent);
 
         this.refines = refines;
@@ -17,14 +17,14 @@ public class RefineApplier extends ClassVisitor {
 
     @Override
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-        final Refine replacedSuperClass = refines.get(superName);
-        if (replacedSuperClass != null && replacedSuperClass.getReplacedClassName() != null) {
+        final RefineClass replacedSuperClass = refines.get(superName);
+        if (replacedSuperClass != null && !replacedSuperClass.getReplacedClassName().isEmpty()) {
             superName = replacedSuperClass.getReplacedClassName();
         }
 
         for (int i = 0; i < interfaces.length; i++) {
-            final Refine replacedClass = refines.get(interfaces[i]);
-            if (replacedClass != null && replacedClass.getReplacedClassName() != null) {
+            final RefineClass replacedClass = refines.get(interfaces[i]);
+            if (replacedClass != null && !replacedClass.getReplacedClassName().isEmpty()) {
                 interfaces[i] = replacedClass.getReplacedClassName();
             }
         }
@@ -37,13 +37,13 @@ public class RefineApplier extends ClassVisitor {
         return new MethodVisitor(Opcodes.ASM9, super.visitMethod(access, name, descriptor, signature, exceptions)) {
             @Override
             public void visitMethodInsn(int opcode, String owner, String name, String descriptor, boolean isInterface) {
-                final Refine refine = refines.get(owner);
+                final RefineClass refine = refines.get(owner);
                 if (refine != null) {
                     String replacedName = refine.getMemberReplacement()
                             .get(String.format(RefineCollector.FORMAT_METHOD_KEY, name, descriptor));
                     if (replacedName != null)
                         name = replacedName;
-                    if (refine.getReplacedClassName() != null)
+                    if (!refine.getReplacedClassName().isEmpty())
                         owner = refine.getReplacedClassName();
                 }
 
@@ -52,13 +52,13 @@ public class RefineApplier extends ClassVisitor {
 
             @Override
             public void visitFieldInsn(int opcode, String owner, String name, String descriptor) {
-                final Refine refine = refines.get(owner);
+                final RefineClass refine = refines.get(owner);
                 if (refine != null) {
                     final String replacedName = refine.getMemberReplacement()
                             .get(String.format(RefineCollector.FORMAT_FIELD_KEY, name, descriptor));
                     if (replacedName != null)
                         name = replacedName;
-                    if (refine.getReplacedClassName() != null)
+                    if (!refine.getReplacedClassName().isEmpty())
                         owner = refine.getReplacedClassName();
                 }
 

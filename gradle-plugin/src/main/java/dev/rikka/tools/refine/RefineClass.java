@@ -2,12 +2,12 @@ package dev.rikka.tools.refine;
 
 import java.util.Map;
 
-public class Refine {
+public class RefineClass {
     private final String originalClassName;
     private final String replacedClassName;
     private final Map<String, String> memberReplacement;
 
-    public Refine(String originalClassName, String replacedClassName, Map<String, String> memberReplacement) {
+    public RefineClass(String originalClassName, String replacedClassName, Map<String, String> memberReplacement) {
         this.originalClassName = originalClassName;
         this.replacedClassName = replacedClassName;
         this.memberReplacement = memberReplacement;
@@ -27,7 +27,7 @@ public class Refine {
 
     @Override
     public String toString() {
-        return "ClassRefine{" +
+        return "RefineClass{" +
                 "originalClassName='" + originalClassName + '\'' +
                 ", replacedClassName='" + replacedClassName + '\'' +
                 ", memberReplacement=" + memberReplacement +
