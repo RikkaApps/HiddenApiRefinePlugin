@@ -15,7 +15,7 @@ import java.util.AbstractMap;
 import java.util.Map;
 
 public final class RefineCollector {
-    private static final String ANNOTATION_REFINE_AS_DESCRIPTOR = RefineAs.class.getName().replace('.', '/');
+    private static final String ANNOTATION_REFINE_AS_NAME = RefineAs.class.getName();
     private static final String ANNOTATION_DEFAULT_VALUE = "value";
 
     public static Map.Entry<String, String> collect(InputStream stream) throws IOException {
@@ -24,13 +24,16 @@ public final class RefineCollector {
 
         for (AttributeInfo info : file.getAttributes()) {
             if (info instanceof AnnotationsAttribute) {
-                final Annotation annotation = ((AnnotationsAttribute) info).getAnnotation(ANNOTATION_REFINE_AS_DESCRIPTOR);
+                final Annotation annotation = ((AnnotationsAttribute) info).getAnnotation(ANNOTATION_REFINE_AS_NAME);
                 if (annotation == null)
                     continue;
 
                 final MemberValue value = annotation.getMemberValue(ANNOTATION_DEFAULT_VALUE);
                 if (value instanceof ClassMemberValue) {
-                    return new AbstractMap.SimpleEntry<>(file.getName(), ((ClassMemberValue) value).getValue());
+                    return new AbstractMap.SimpleEntry<>(
+                            file.getName().replace('.', '/'),
+                            ((ClassMemberValue) value).getValue().replace('.', '/')
+                    );
                 }
             }
         }
