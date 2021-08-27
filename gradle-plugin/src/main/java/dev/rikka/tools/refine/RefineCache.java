@@ -1,15 +1,15 @@
 package dev.rikka.tools.refine;
 
-import java.util.List;
+import java.util.Map;
 
 public class RefineCache {
-    private final List<RefineClass> refines;
+    private final Map<String, String> refines;
 
-    public RefineCache(List<RefineClass> refines) {
+    public RefineCache(Map<String, String> refines) {
         this.refines = refines;
     }
 
-    public List<RefineClass> getRefines() {
+    public Map<String, String> getRefines() {
         return refines;
     }
 }

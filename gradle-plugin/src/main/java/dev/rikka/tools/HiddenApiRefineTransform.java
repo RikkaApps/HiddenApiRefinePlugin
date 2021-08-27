@@ -54,7 +54,7 @@ public class HiddenApiRefineTransform extends Transform {
     }
 
     private void doTransform(TransformInvocation transform) throws IOException {
-        final HashMap<String, RefineClass> refines = new HashMap<>();
+        final HashMap<String, String> refines = new HashMap<>();
         final Gson gson = new Gson();
 
         boolean forceApply = !transform.isIncremental();
@@ -76,32 +76,28 @@ public class HiddenApiRefineTransform extends Transform {
 
                 if (jarInput.getStatus() == Status.REMOVED) {
                     FileUtils.deleteDirectory(cacheFile.getParentFile());
+                    continue;
                 }
 
                 if (jarInput.getStatus() == Status.NOTCHANGED && cacheFile.exists()) {
                     try {
                         RefineCache cache = gson.fromJson(new FileReader(cacheFile), RefineCache.class);
-                        cache.getRefines().forEach(r -> refines.put(r.getOriginalClassName(), r));
+                        refines.putAll(cache.getRefines());
                         continue;
                     } catch (Exception ignore) {
                         // ignore
                     }
                 }
 
-                final List<RefineClass> scopedRefines = new ArrayList<>();
+                final HashMap<String, String> scopedRefines = new HashMap<>();
 
                 JarUtils.visit(inputFile, (entry, stream) -> {
                     if (!entry.getName().endsWith(".class"))
                         return;
 
-                    ClassReader reader = new ClassReader(stream);
-                    RefineCollector collector = new RefineCollector();
-
-                    reader.accept(collector, 0);
-
-                    final RefineClass refine = collector.collect();
-                    if (!refine.getReplacedClassName().isEmpty() || refine.getMemberReplacement().size() > 0) {
-                        scopedRefines.add(collector.collect());
+                    final Map.Entry<String, String> refine = RefineCollector.collect(stream);
+                    if (refine != null) {
+                        scopedRefines.put(refine.getKey(), refine.getValue());
                     }
                 });
 
@@ -110,7 +106,8 @@ public class HiddenApiRefineTransform extends Transform {
                 try (JsonWriter writer = gson.newJsonWriter(new FileWriter(cacheFile))) {
                     gson.toJson(new RefineCache(scopedRefines), RefineCache.class, writer);
                 }
-                scopedRefines.forEach(r -> refines.put(r.getOriginalClassName(), r));
+
+                refines.putAll(scopedRefines);
 
                 forceApply = true;
             }
@@ -122,6 +119,8 @@ public class HiddenApiRefineTransform extends Transform {
         if (forceApply) {
             transform.getOutputProvider().deleteAll();
         }
+
+        final RefineApplier applier = new RefineApplier(refines);
 
         for (TransformInput input : transform.getInputs()) {
             for (JarInput jarInput : input.getJarInputs()) {
@@ -140,6 +139,7 @@ public class HiddenApiRefineTransform extends Transform {
 
                 if (jarInput.getStatus() == Status.REMOVED) {
                     outputFile.delete();
+                    continue;
                 }
 
                 try (JarOutputStream output = new JarOutputStream(new FileOutputStream(outputFile))) {
@@ -147,13 +147,7 @@ public class HiddenApiRefineTransform extends Transform {
                         output.putNextEntry(new JarEntry(entry.getName()));
 
                         if (entry.getName().endsWith(".class")) {
-                            ClassReader reader = new ClassReader(stream);
-                            ClassWriter writer = new ClassWriter(0);
-                            RefineApplier applier = new RefineApplier(refines, writer);
-
-                            reader.accept(applier, 0);
-
-                            output.write(writer.toByteArray());
+                            applier.applyFor(stream, output);
                         } else {
                             stream.transferTo(output);
                         }
@@ -203,12 +197,7 @@ public class HiddenApiRefineTransform extends Transform {
 
                     try (FileInputStream in = new FileInputStream(inputFile); FileOutputStream out = new FileOutputStream(outputFile)) {
                         if (inputFile.getName().endsWith(".class")) {
-                            ClassReader reader = new ClassReader(in);
-                            ClassWriter writer = new ClassWriter(0);
-
-                            reader.accept(new RefineApplier(refines, writer), 0);
-
-                            out.write(writer.toByteArray());
+                            applier.applyFor(in, out);
                         } else {
                             in.transferTo(out);
                         }
