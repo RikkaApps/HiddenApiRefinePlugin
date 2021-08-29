@@ -1,4 +1,4 @@
-package dev.rikka.tools;
+package dev.rikka.tools.refine;
 
 import com.android.build.api.transform.*;
 import com.android.build.api.transform.QualifiedContent.Scope;
@@ -7,8 +7,8 @@ import com.google.gson.stream.JsonWriter;
 import dev.rikka.tools.refine.RefineApplier;
 import dev.rikka.tools.refine.RefineCache;
 import dev.rikka.tools.refine.RefineCollector;
-import dev.rikka.tools.utils.FileUtils;
-import dev.rikka.tools.utils.JarUtils;
+import dev.rikka.tools.refine.utils.FileUtils;
+import dev.rikka.tools.refine.utils.JarUtils;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -19,7 +19,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
 @SuppressWarnings({"deprecation", "ResultOfMethodCallIgnored"})
-public class HiddenApiRefineTransform extends Transform {
+public class RefineTransform extends Transform {
     @Override
     public String getName() {
         return "HiddenApiRefine";

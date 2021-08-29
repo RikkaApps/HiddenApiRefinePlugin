@@ -1,4 +1,4 @@
-package dev.rikka.tools.utils;
+package dev.rikka.tools.refine.utils;
 
 import java.io.File;
 import java.io.FileInputStream;

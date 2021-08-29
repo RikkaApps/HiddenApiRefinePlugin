@@ -12,7 +12,7 @@ version = extra["version"]!!
 
 val artifactName = "gradle-plugin"
 val pluginId = "$group.$artifactName"
-val pluginClass = "$group.HiddenApiRefinePlugin"
+val pluginClass = "$group.RefinePlugin"
 
 repositories {
     mavenCentral()
