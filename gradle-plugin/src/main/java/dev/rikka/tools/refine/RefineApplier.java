@@ -16,13 +16,13 @@ public final class RefineApplier {
         final DataInputStream input = new DataInputStream(new BufferedInputStream(in));
         final DataOutputStream output = new DataOutputStream(new BufferedOutputStream(out));
         final ClassFile file = new ClassFile(input);
-        final String selfReplaced = refines.remove(file.getName());
+        final String self = refines.remove(file.getName());
 
         try {
             file.renameClass(refines);
         } finally {
-            if (selfReplaced != null) {
-                refines.put(file.getName(), selfReplaced);
+            if (self != null) {
+                refines.put(file.getName(), self);
             }
         }
 

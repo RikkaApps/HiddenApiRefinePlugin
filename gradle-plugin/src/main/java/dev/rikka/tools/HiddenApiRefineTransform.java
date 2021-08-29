@@ -4,14 +4,11 @@ import com.android.build.api.transform.*;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonWriter;
-import dev.rikka.tools.refine.RefineClass;
 import dev.rikka.tools.refine.RefineApplier;
 import dev.rikka.tools.refine.RefineCache;
 import dev.rikka.tools.refine.RefineCollector;
 import dev.rikka.tools.utils.FileUtils;
 import dev.rikka.tools.utils.JarUtils;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassWriter;
 
 import java.io.*;
 import java.nio.file.Files;
