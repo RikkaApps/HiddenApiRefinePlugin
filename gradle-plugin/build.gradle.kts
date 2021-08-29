@@ -10,8 +10,7 @@ plugins {
 group = extra["group"]!!
 version = extra["version"]!!
 
-val artifactPrefix: String by extra
-val artifactName = "$artifactPrefix-gradle-plugin"
+val artifactName = "gradle-plugin"
 val pluginId = "$group.$artifactName"
 val pluginClass = "$group.HiddenApiRefinePlugin"
 

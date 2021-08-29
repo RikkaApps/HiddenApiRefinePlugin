@@ -9,8 +9,7 @@ plugins {
 group = extra["group"]!!
 version = extra["version"]!!
 
-val artifactPrefix: String by extra
-val artifactName = "$artifactPrefix-runtime"
+val artifactName = "runtime"
 
 repositories {
     mavenCentral()

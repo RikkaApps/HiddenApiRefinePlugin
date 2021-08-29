@@ -6,9 +6,8 @@ buildscript {
 }
 
 allprojects {
-    extra["group"] = "dev.rikka.tools"
+    extra["group"] = "dev.rikka.tools.refine"
     extra["version"] = "2.0.0"
-    extra["artifactPrefix"] = "hidden-api-refine"
 }
 
 task("clean", type = Delete::class) {
