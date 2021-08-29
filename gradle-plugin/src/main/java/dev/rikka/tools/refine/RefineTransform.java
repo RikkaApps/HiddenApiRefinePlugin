@@ -139,6 +139,8 @@ public class RefineTransform extends Transform {
                     JarUtils.visit(inputFile, (entry, stream) -> {
                         output.putNextEntry(new JarEntry(entry.getName()));
 
+                        System.out.println("[" + getName() + "] Transforming " + entry.getName());
+
                         if (entry.getName().endsWith(".class")) {
                             applier.applyFor(stream, output);
                         } else {
