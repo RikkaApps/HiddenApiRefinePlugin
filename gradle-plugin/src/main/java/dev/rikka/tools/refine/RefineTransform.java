@@ -4,9 +4,6 @@ import com.android.build.api.transform.*;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonWriter;
-import dev.rikka.tools.refine.RefineApplier;
-import dev.rikka.tools.refine.RefineCache;
-import dev.rikka.tools.refine.RefineCollector;
 import dev.rikka.tools.refine.utils.FileUtils;
 import dev.rikka.tools.refine.utils.JarUtils;
 
@@ -66,7 +63,6 @@ public class RefineTransform extends Transform {
                 final File inputFile = jarInput.getFile();
                 final File cacheFile = Paths.get(
                         transform.getContext().getTemporaryDir().getAbsolutePath(),
-                        ((Scope) jarInput.getScopes().toArray()[0]).name(),
                         jarInput.getName(),
                         "refine-cache.json"
                 ).toFile();
