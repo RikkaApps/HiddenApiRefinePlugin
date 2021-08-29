@@ -6,6 +6,8 @@ import com.google.gson.Gson;
 import com.google.gson.stream.JsonWriter;
 import dev.rikka.tools.refine.utils.FileUtils;
 import dev.rikka.tools.refine.utils.JarUtils;
+import org.gradle.api.logging.Logger;
+import org.gradle.api.logging.Logging;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -48,6 +50,7 @@ public class RefineTransform extends Transform {
     }
 
     private void doTransform(TransformInvocation transform) throws IOException {
+        final Logger logger = Logging.getLogger(RefineTransform.class);
         final HashMap<String, String> refines = new HashMap<>();
         final Gson gson = new Gson();
 
@@ -76,6 +79,7 @@ public class RefineTransform extends Transform {
                     try {
                         RefineCache cache = gson.fromJson(new FileReader(cacheFile), RefineCache.class);
                         refines.putAll(cache.getRefines());
+                        logger.debug("Refines from " + jarInput.getFile() + " cache matched");
                         continue;
                     } catch (Exception ignore) {
                         // ignore
@@ -87,6 +91,8 @@ public class RefineTransform extends Transform {
                 JarUtils.visit(inputFile, (entry, stream) -> {
                     if (!entry.getName().endsWith(".class"))
                         return;
+
+                    logger.debug("Collecting " + entry.getName());
 
                     final Map.Entry<String, String> refine = RefineCollector.collect(stream);
                     if (refine != null) {
@@ -107,6 +113,8 @@ public class RefineTransform extends Transform {
 
             // TODO: handle DirectoryInput
         }
+
+        logger.info("Refines " + refines);
 
         // Apply refines
         if (forceApply) {
@@ -139,9 +147,9 @@ public class RefineTransform extends Transform {
                     JarUtils.visit(inputFile, (entry, stream) -> {
                         output.putNextEntry(new JarEntry(entry.getName()));
 
-                        System.out.println("[" + getName() + "] Transforming " + entry.getName());
-
                         if (entry.getName().endsWith(".class")) {
+                            logger.debug("Transforming " + entry.getName());
+
                             applier.applyFor(stream, output);
                         } else {
                             stream.transferTo(output);
@@ -180,8 +188,6 @@ public class RefineTransform extends Transform {
                     final File inputFile = root.resolve(path).toFile();
                     final File outputFile = new File(outputDir, path);
 
-                    System.out.println("[" + getName() + "] Transforming " + path);
-
                     if (!inputFile.exists()) {
                         outputFile.delete();
 
@@ -192,6 +198,8 @@ public class RefineTransform extends Transform {
 
                     try (FileInputStream in = new FileInputStream(inputFile); FileOutputStream out = new FileOutputStream(outputFile)) {
                         if (inputFile.getName().endsWith(".class")) {
+                            logger.debug("Transforming " + path.replace('\\', '/'));
+
                             applier.applyFor(in, out);
                         } else {
                             in.transferTo(out);
