@@ -1,64 +1,42 @@
+import java.net.URI
+
 plugins {
-    id('java')
-    id('maven-publish')
-    id('java-gradle-plugin')
-    id('signing')
+    java
+    signing
+    `maven-publish`
 }
 
-group = "dev.rikka.tools"
-version = "1.1.0"
+group = extra["group"]!!
+version = extra["version"]!!
 
-def artifactName = "hidden-api-refine"
-def pluginId = "${group}.${artifactName}"
-def pluginClass = "${group}.HiddenApiRefinePlugin"
-
-repositories {
-    mavenCentral()
-    google()
-}
-
-dependencies {
-    compileOnly(gradleApi())
-    compileOnly("com.android.tools.build:gradle:4.2.0")
-    implementation("org.javassist:javassist:3.27.0-GA")
-}
+val artifactName = "annotation"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 
-gradlePlugin {
-    plugins {
-        create("HiddenApiRefine") {
-            id = pluginId
-            implementationClass = pluginClass
-        }
-    }
+task("javadocJar", type = Jar::class) {
+    archiveClassifier.set("javadoc")
+    from(tasks["javadoc"])
 }
 
-task javadocJar(type: Jar) {
-    classifier = 'javadoc'
-    from javadoc
-}
-
-task sourcesJar(type: Jar) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
+task("sourcesJar", type = Jar::class) {
+    archiveClassifier.set("sources")
+    from(sourceSets.main.get().allSource)
 }
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
-            groupId = project.group.toString()
+        create("maven", type = MavenPublication::class) {
+            group = project.group.toString()
             artifactId = artifactName
             version = project.version.toString()
 
-            afterEvaluate {
-                from(components["java"])
-                artifact javadocJar
-                artifact sourcesJar
-            }
+            from(components["java"])
+
+            artifact(tasks["javadocJar"])
+            artifact(tasks["sourcesJar"])
 
             pom {
                 name.set("HiddenApiRefine")
@@ -83,18 +61,19 @@ publishing {
         }
     }
     repositories {
+        mavenLocal()
         maven {
-            name("ossrh")
-            url("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-            credentials(PasswordCredentials)
+            name = "ossrh"
+            url = URI("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2")
+            credentials(PasswordCredentials::class.java)
         }
     }
 }
 
 signing {
-    def signingKey = findProperty("signingKey")
-    def signingPassword = findProperty("signingPassword")
-    def secretKeyRingFile = findProperty("signing.secretKeyRingFile")
+    val signingKey = findProperty("signingKey") as? String
+    val signingPassword = findProperty("signingPassword") as? String
+    val secretKeyRingFile = findProperty("signing.secretKeyRingFile") as? String
 
     if (secretKeyRingFile != null && file(secretKeyRingFile).exists()) {
         sign(publishing.publications)
