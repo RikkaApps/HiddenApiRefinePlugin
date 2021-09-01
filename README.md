@@ -4,7 +4,7 @@ A Gradle plugin that improves the experience when developing Android apps, espec
 
 ## Background
 
-When developing system tools, it's impossible inevitable to use hidden APIs. There are two ways to use hidden APIs, the reflection way and the linking way. For some types of system tools, a large amount of hidden APIs is required, the reflection way is too inconvenient. So the linking way is commonly used in those projects.
+When developing system tools, it's inevitable to use hidden APIs. There are two ways to use hidden APIs, the reflection way and the linking way. For some types of system tools, a large amount of hidden APIs is required, using the reflection way is too inconvenient. So the linking way is commonly used in those projects.
 
 In short, the linking way is to create Java-only modules with stub classes and then `compileOnly` them in the main Android modules. This is the same as what Android SDK's `android.jar` does.
 
@@ -18,13 +18,17 @@ This plugin is to solve these problems.
 
 ## What do this plugin do
 
-This plugin uses the Transform API of the Android Gradle Plugin to create a transform that removes specific prefixes from class names. So we can add a special prefix (e.g., `'$'`) to stub classes, and all the problems will be gone and the stub module does not need to be a Java-only module.
+This plugin uses the Transform API of the Android Gradle Plugin to create a transform that modifies class names, the names are user specified by annotation `@RefineAs`. So that all the problems will be gone and the stub module does not need to be a Java-only module.
 
-The idea is from [@Kr328](https://github.com/Kr328).
+The idea and the implementation is from [@Kr328](https://github.com/Kr328).
 
 ## Usage
 
-### Root project
+![gradle-plugin](https://img.shields.io/maven-central/v/dev.rikka.tools.refine/gradle-plugin?label=gradle-plugin)
+![annotation](https://img.shields.io/maven-central/v/dev.rikka.tools.refine/annotation?label=annotation)
+![runtime](https://img.shields.io/maven-central/v/dev.rikka.tools.refine/runtime?label=runtime)
+
+### Add gradle plugin to root project
 
 ```gradle
 buildscript {
@@ -32,69 +36,74 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'dev.rikka.tools:hidden-api-refine:1.1.0'
+        classpath 'dev.rikka.tools.refine:gradle-plugin:2.0.0'
     }
 }
 ```
 
-### Module (Use in the final Android app module)
+### Create "hidden-api" module
 
-```gradle
-plugins {
-    id('dev.rikka.tools.hidden-api-refine')
-}
+1. Create a new Android library module
 
-hiddenApiRefine {
-    // Prefix to remove, default is ['$']
-    refinePrefix = ['$']
-    // Print log, default is true
-    log = true
-}
-```
+2. Add annotation dependency
 
-Note, the plugin is to remove the prefix of the package name, not the class name. For example, the `$` in `com.example.$Example` will not be removed.
+   ```gradle
+   dependencies {
+       implementation("dev.rikka.tools.refine:annotation:2.0.0")
+   }
+   ```
 
-### Use "hidden" classes with public classes
+3. Add the hidden classes
+   
+   Here, we use a hidden `ActivityManager` API as the example.
 
-Sometimes we need to use "hidden" classes with public classes.
+   ```java
+   package android.app;
+   
+   import dev.rikka.tools.refine.RefineAs;
+   import utils.Utils;
+   
+   @RefineAs(ActivityManager.class)
+   public class ActivityManagerHidden {
+       public void forceStopPackageAsUser(String packageName, int userId) {
+           Utils.throwStub();
+       }
+   }
+   ```
+   
+   This line `@RefineAs(ActivityManager.class)` will let the plugin renames  `android.app.ActivityManagerHidden` to `android.app.ActivityManager`.
 
-For example, use the hidden `android.os.UserHandle#of` method to create an instance of `UserHandle`.
+### Use hidden API
 
-```
-package $android.os;
+1. Apply this plugin in the final Android application module
 
-public class UserHandle {
-    public static UserHandle ALL;
+   ```gradle
+   plugins {
+       id('dev.rikka.tools.refine.gradle-plugin')
+   }
+   ```
 
-    public static UserHandle of(int userId) {
-        throw new RuntimeException();
-    }
-}
-```
+2. Import "hidden-api" module with `compileOnly`
 
-```
-$android.os.UserHandle userHandle = $android.os.UserHandle.of(userId);
-```
+   ```gradle
+   dependencies {
+       compileOnly project(':hidden-api')
+   }
+   ```
 
-However, this `UserHandle` cannot be passed to other public APIs that accepts `UserHandle`. This is because this `UserHandle` is actually `$android.os.UserHandle` rather than `android.os.UserHandle`.
+3. Import the "Refine" class
 
-This can be simply solved with this "trick".
+   ```gradle
+   dependencies {
+       implementation("dev.rikka.tools.refine:runtime:2.0.0")
+   }
+   ```
 
-```
-public class Unsafe {
-    @SuppressWarnings("unchecked")
-    public static <T> T unsafeCast(Object object) {
-        return (T) object;
-    }
-}
-```
+4. Use the hidden API
 
-```
-UserHandle userHandle = Unsafe.unsafeCast($android.os.UserHandle.of(userId));
-```
+   ```java
+   ActivityManager activityManager = context.getSystemService(ActivityManager.class);
+   Refine.unsafeCast<ActivityManagerHidden>(activityManager).forceStopPackageAsUser(packageName, userId);
+   ```
 
-After R8, this "cast" will be "removed" or "inlined". This line will be identical to a normal method call.
-
-```
-UserHandle userHandle = android.os.UserHandle.of(userId);
-```
+   After R8, this "cast" will be "removed" or "inlined". This line will be identical to a normal method call.
