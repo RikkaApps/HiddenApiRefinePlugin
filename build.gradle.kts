@@ -87,11 +87,14 @@ subprojects {
             val signingPassword = findProperty("signingPassword") as? String
             val secretKeyRingFile = findProperty("signing.secretKeyRingFile") as? String
 
-            if (secretKeyRingFile != null && file(secretKeyRingFile).exists()) {
+            if ((secretKeyRingFile != null && file(secretKeyRingFile).exists()) || signingKey != null) {
+                if (signingKey != null) {
+                    useInMemoryPgpKeys(signingKey, signingPassword)
+                }
+
                 sign(publishing.publications)
-            } else if (signingKey != null) {
-                useInMemoryPgpKeys(signingKey, signingPassword)
-                sign(publishing.publications)
+
+                tasks["publishMavenPublicationToOssrhRepository"].dependsOn(tasks["signPluginMavenPublication"])
             }
         }
     }
