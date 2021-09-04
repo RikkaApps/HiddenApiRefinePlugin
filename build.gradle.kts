@@ -92,9 +92,9 @@ subprojects {
                     useInMemoryPgpKeys(signingKey, signingPassword)
                 }
 
-                sign(publishing.publications)
+                val task = sign(publishing.publications)
 
-                tasks["publishMavenPublicationToOssrhRepository"].dependsOn(tasks["signPluginMavenPublication"])
+                tasks["publishMavenPublicationToOssrhRepository"].dependsOn(task)
             }
         }
     }
