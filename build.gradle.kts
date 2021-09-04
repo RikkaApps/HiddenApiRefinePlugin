@@ -88,7 +88,6 @@ subprojects {
             val secretKeyRingFile = findProperty("signing.secretKeyRingFile") as? String
 
             if (secretKeyRingFile != null && file(secretKeyRingFile).exists()) {
-
                 sign(publishing.publications)
             } else if (signingKey != null) {
                 useInMemoryPgpKeys(signingKey, signingPassword)
