@@ -13,8 +13,11 @@ repositories {
 
 dependencies {
     compileOnly(gradleApi())
-    compileOnly("com.android.tools.build:gradle:7.0.1")
+
     implementation(project(":annotation"))
+    implementation(project(":annotation-processor"))
+
+    compileOnly("com.android.tools.build:gradle:7.0.1")
     implementation("com.google.code.gson:gson:2.8.8")
     implementation("org.javassist:javassist:3.28.0-GA")
 }

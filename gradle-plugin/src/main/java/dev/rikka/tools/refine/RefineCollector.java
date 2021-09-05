@@ -15,26 +15,22 @@ import java.util.AbstractMap;
 import java.util.Map;
 
 public final class RefineCollector {
-    private static final String ANNOTATION_REFINE_AS_NAME = RefineAs.class.getName();
-    private static final String ANNOTATION_DEFAULT_VALUE = "value";
-
     public static Map.Entry<String, String> collect(InputStream stream) throws IOException {
         final DataInputStream in = new DataInputStream(new BufferedInputStream(stream));
         final ClassFile file = new ClassFile(in);
 
         for (AttributeInfo info : file.getAttributes()) {
             if (info instanceof AnnotationsAttribute) {
-                final Annotation annotation = ((AnnotationsAttribute) info).getAnnotation(ANNOTATION_REFINE_AS_NAME);
+                final Annotation annotation = ((AnnotationsAttribute) info).getAnnotation(RefineProcessor.DESCRIPTOR_REFINE_DESCRIPTOR);
                 if (annotation == null)
                     continue;
 
-                final MemberValue value = annotation.getMemberValue(ANNOTATION_DEFAULT_VALUE);
-                if (value instanceof ClassMemberValue) {
-                    return new AbstractMap.SimpleEntry<>(
-                            file.getName().replace('.', '/'),
-                            ((ClassMemberValue) value).getValue().replace('.', '/')
-                    );
-                }
+                final MemberValue from = annotation.getMemberValue(RefineProcessor.DESCRIPTOR_REFINE_FROM);
+                final MemberValue to = annotation.getMemberValue(RefineProcessor.DESCRIPTOR_REFINE_TO);
+                return new AbstractMap.SimpleEntry<>(
+                        ((ClassMemberValue) from).getValue().replace('.', '/'),
+                        ((ClassMemberValue) to).getValue().replace('.', '/')
+                );
             }
         }
 
