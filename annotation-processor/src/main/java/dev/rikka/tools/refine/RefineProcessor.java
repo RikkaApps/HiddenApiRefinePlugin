@@ -106,7 +106,7 @@ public class RefineProcessor extends AbstractProcessor {
         final String descriptionInternalName = sourcePackageName.replace('.', '/') + "/" + descriptionName;
 
         final FileObject refineFile = processingEnv.getFiler()
-                .createResource(StandardLocation.CLASS_OUTPUT, sourcePackageName, descriptionName + ".class", root);
+                .createResource(StandardLocation.CLASS_OUTPUT, sourcePackageName, descriptionName + ".class", type, root);
 
         final String targetInternalName = replace + sourceInternalName.substring(prefix.length());
 
@@ -135,7 +135,7 @@ public class RefineProcessor extends AbstractProcessor {
                 .getTypeElement(targetPackageName + "." + targetClassName.replace('$', '.'));
         if (target == null) {
             final FileObject classFile = processingEnv.getFiler()
-                    .createResource(StandardLocation.CLASS_OUTPUT, targetPackageName, targetClassName + ".class", root);
+                    .createResource(StandardLocation.CLASS_OUTPUT, targetPackageName, targetClassName + ".class", type, root);
 
             try (DataOutputStream stream = new DataOutputStream(classFile.openOutputStream())) {
                 new ClassFile(type.getKind().isInterface(), targetInternalName, null).write(stream);
