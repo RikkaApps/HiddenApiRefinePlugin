@@ -5,8 +5,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Retention(RetentionPolicy.CLASS)
-@Target({ElementType.TYPE})
+@Retention(RetentionPolicy.SOURCE)
+@Target(ElementType.TYPE)
 public @interface RefineAs {
     Class<?> value();
 }

@@ -31,7 +31,7 @@ public class RefineTransform extends Transform {
 
     @Override
     public Set<? super Scope> getScopes() {
-        return Set.of(Scope.PROJECT, Scope.SUB_PROJECTS, Scope.EXTERNAL_LIBRARIES);
+        return Set.of(Scope.PROJECT, Scope.SUB_PROJECTS, Scope.EXTERNAL_LIBRARIES, Scope.TESTED_CODE);
     }
 
     @Override
