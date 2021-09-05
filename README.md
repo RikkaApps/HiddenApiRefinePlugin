@@ -36,7 +36,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'dev.rikka.tools.refine:gradle-plugin:2.0.0'
+        classpath 'dev.rikka.tools.refine:gradle-plugin:3.0.0'
     }
 }
 ```
@@ -49,29 +49,29 @@ buildscript {
 
    ```gradle
    dependencies {
-       implementation("dev.rikka.tools.refine:annotation:2.0.0")
+       annotationProcessor 'dev.rikka.tools.refine:annotation-processor:3.0.0'
+       compileOnly 'dev.rikka.tools.refine:annotation:3.0.0'
    }
    ```
 
 3. Add the hidden classes
-   
+
    Here, we use a hidden `ActivityManager` API as the example.
 
    ```java
    package android.app;
-   
+
    import dev.rikka.tools.refine.RefineAs;
-   import utils.Utils;
-   
+
    @RefineAs(ActivityManager.class)
    public class ActivityManagerHidden {
        public void forceStopPackageAsUser(String packageName, int userId) {
-           Utils.throwStub();
+           throw new RuntimeException();
        }
    }
    ```
-   
-   This line `@RefineAs(ActivityManager.class)` will let the plugin renames  `android.app.ActivityManagerHidden` to `android.app.ActivityManager`.
+
+   This line `@RefineAs(ActivityManager.class)` will let the plugin renames `android.app.ActivityManagerHidden` to `android.app.ActivityManager`.
 
 ### Use hidden API
 
@@ -91,11 +91,11 @@ buildscript {
    }
    ```
 
-3. Import the "Refine" class
+3. Import the "Refine" class (Optional, if you don't need the "unsafeCast" method)
 
    ```gradle
    dependencies {
-       implementation("dev.rikka.tools.refine:runtime:2.0.0")
+       implementation("dev.rikka.tools.refine:runtime:3.0.0")
    }
    ```
 
