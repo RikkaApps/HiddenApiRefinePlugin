@@ -25,6 +25,7 @@ The idea and the implementation is from [@Kr328](https://github.com/Kr328).
 ## Usage
 
 ![gradle-plugin](https://img.shields.io/maven-central/v/dev.rikka.tools.refine/gradle-plugin?label=gradle-plugin)
+![annotation-processor](https://img.shields.io/maven-central/v/dev.rikka.tools.refine/annotation?label=annotation-processor)
 ![annotation](https://img.shields.io/maven-central/v/dev.rikka.tools.refine/annotation?label=annotation)
 ![runtime](https://img.shields.io/maven-central/v/dev.rikka.tools.refine/runtime?label=runtime)
 
@@ -56,22 +57,29 @@ buildscript {
 
 3. Add the hidden classes
 
-   Here, we use a hidden `ActivityManager` API as the example.
+   Here, we use a hidden `PackageManager` API as the example.
 
    ```java
-   package android.app;
+   package android.content.pm;
 
-   import dev.rikka.tools.refine.RefineAs;
+   import dev.rikka.tools.refine.RefineAs; 
+   
+   @RefineAs(PackageManager.class)
+   public class PackageManagerHidden {
+       public interface OnPermissionsChangedListener {
+           void onPermissionsChanged(int uid);
+       }
 
-   @RefineAs(ActivityManager.class)
-   public class ActivityManagerHidden {
-       public void forceStopPackageAsUser(String packageName, int userId) {
-           throw new RuntimeException();
+       public void addOnPermissionsChangeListener(OnPermissionsChangedListener listener) {
+           throw new RuntimeException("Stub!");
+       }
+       public void removeOnPermissionsChangeListener(OnPermissionsChangedListener listener) {
+           throw new RuntimeException("Stub!");
        }
    }
    ```
 
-   This line `@RefineAs(ActivityManager.class)` will let the plugin renames `android.app.ActivityManagerHidden` to `android.app.ActivityManager`.
+   This line `@RefineAs(PackageManager.class)` will let the plugin renames `android.app.PackageManagerHidden`/`android.app.PackageManagerHidden.OnPermissionsChangedListener` to `android.app.PackageManager`/`android.app.PackageManager.OnPermissionsChangedListener`.
 
 ### Use hidden API
 
@@ -102,8 +110,13 @@ buildscript {
 4. Use the hidden API
 
    ```java
-   ActivityManager activityManager = context.getSystemService(ActivityManager.class);
-   Refine.unsafeCast<ActivityManagerHidden>(activityManager).forceStopPackageAsUser(packageName, userId);
+   Refine.<PackageManagerHidden>unsafeCast(context.getPackageManager())
+                .addOnPermissionsChangeListener(new PackageManagerHidden.OnPermissionsChangedListener() {
+                    @Override
+                    public void onPermissionsChanged(int uid) {
+                        // do staff
+                    }
+                });
    ```
 
    After R8, this "cast" will be "removed" or "inlined". This line will be identical to a normal method call.
