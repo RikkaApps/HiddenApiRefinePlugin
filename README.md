@@ -29,6 +29,8 @@ The idea and the implementation is from [@Kr328](https://github.com/Kr328).
 ![annotation](https://img.shields.io/maven-central/v/dev.rikka.tools.refine/annotation?label=annotation)
 ![runtime](https://img.shields.io/maven-central/v/dev.rikka.tools.refine/runtime?label=runtime)
 
+Replace all the `<version>` below with the version shows here.
+
 ### Add gradle plugin to root project
 
 ```gradle
@@ -37,7 +39,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'dev.rikka.tools.refine:gradle-plugin:3.0.0'
+        classpath 'dev.rikka.tools.refine:gradle-plugin:<version>'
     }
 }
 ```
@@ -50,8 +52,8 @@ buildscript {
 
    ```gradle
    dependencies {
-       annotationProcessor 'dev.rikka.tools.refine:annotation-processor:3.0.0'
-       compileOnly 'dev.rikka.tools.refine:annotation:3.0.0'
+       annotationProcessor 'dev.rikka.tools.refine:annotation-processor:<version>'
+       compileOnly 'dev.rikka.tools.refine:annotation:<version>'
    }
    ```
 
@@ -62,8 +64,8 @@ buildscript {
    ```java
    package android.content.pm;
 
-   import dev.rikka.tools.refine.RefineAs; 
-   
+   import dev.rikka.tools.refine.RefineAs;
+
    @RefineAs(PackageManager.class)
    public class PackageManagerHidden {
        public interface OnPermissionsChangedListener {
@@ -103,7 +105,7 @@ buildscript {
 
    ```gradle
    dependencies {
-       implementation("dev.rikka.tools.refine:runtime:3.0.0")
+       implementation("dev.rikka.tools.refine:runtime:<version>")
    }
    ```
 
