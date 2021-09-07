@@ -7,7 +7,7 @@ buildscript {
 
 allprojects {
     group = "dev.rikka.tools.refine"
-    version = "3.0.2"
+    version = "3.0.3"
 }
 
 task("clean", type = Delete::class) {
