@@ -19,6 +19,14 @@ import java.util.jar.JarOutputStream;
 
 @SuppressWarnings({"deprecation", "ResultOfMethodCallIgnored"})
 public class RefineTransform extends Transform {
+
+    private final Set<? super Scope> scopes;
+
+    public RefineTransform(boolean isLibrary) {
+        scopes = isLibrary ? Set.of(Scope.PROJECT) :
+                Set.of(Scope.PROJECT, Scope.SUB_PROJECTS, Scope.EXTERNAL_LIBRARIES);
+    }
+
     @Override
     public String getName() {
         return "HiddenApiRefine";
@@ -31,7 +39,7 @@ public class RefineTransform extends Transform {
 
     @Override
     public Set<? super Scope> getScopes() {
-        return Set.of(Scope.PROJECT, Scope.SUB_PROJECTS, Scope.EXTERNAL_LIBRARIES);
+        return scopes;
     }
 
     @Override

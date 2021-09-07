@@ -1,6 +1,7 @@
 package dev.rikka.tools.refine;
 
 import com.android.build.gradle.BaseExtension;
+import com.android.build.gradle.LibraryExtension;
 import org.gradle.api.GradleException;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -13,6 +14,7 @@ public class RefinePlugin implements Plugin<Project> {
         if (androidExtension == null)
             throw new GradleException("Android extension not found");
 
-        androidExtension.registerTransform(new RefineTransform());
+        boolean isLibrary = androidExtension instanceof LibraryExtension;
+        androidExtension.registerTransform(new RefineTransform(isLibrary));
     }
 }
