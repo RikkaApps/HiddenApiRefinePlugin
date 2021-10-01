@@ -9,11 +9,6 @@ dependencies {
     compileOnly(gradleApi())
 
     implementation(project(":annotation"))
-    implementation(project(":annotation-processor"))
-
-    compileOnly(libs.android.gradle)
-    implementation(libs.google.gson)
-    implementation(libs.javassist)
 }
 
 gradlePlugin {

@@ -1,0 +1,30 @@
+<idea-plugin>
+    <id>dev.rikka.tools.refine.idea-plugin</id>
+    <name>HiddenApiRefine</name>
+    <vendor email="kr328app@outlook.com" url="https://www.github.com/Kr328">Kr328</vendor>
+
+    <description><![CDATA[
+    HiddenApiRefine code completion support plugin.
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.java</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <lang.psiAugmentProvider implementation="dev.rikka.tools.refine.RefineForPsiPlugin"/>
+        <localInspection implementationClass="dev.rikka.tools.refine.UseRefinesInspectionPlugin"
+                         displayName="Use refined without @UseRefines"
+                         language="JAVA"
+                         level="ERROR"
+                         groupPath="Java"
+                         groupName="HiddenApiRefine"
+                         enabledByDefault="true"/>
+        <localInspection implementationClass="dev.rikka.tools.refine.RefineForInspectionPlugin"
+                         displayName="@RefineFor with inner Class"
+                         language="JAVA"
+                         level="ERROR"
+                         groupPath="Java"
+                         groupName="HiddenApiRefine"
+                         enabledByDefault="true"/>
+    </extensions>
+</idea-plugin>
