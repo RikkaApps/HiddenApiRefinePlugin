@@ -76,7 +76,7 @@ Replace all the `<version>` below with the version shows here.
 
    ```gradle
    plugins {
-       id('dev.rikka.tools.refine') version "<version>"
+       id('dev.rikka.tools.refine') version '<version>'
    }
    ```
 
