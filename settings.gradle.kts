@@ -19,7 +19,7 @@ dependencyResolutionManagement {
         google()
     }
     versionCatalogs {
-        create("deps") {
+        create("libs") {
             val agp = "7.1.2"
             val gson = "2.9.0"
             val service = "1.0.1"

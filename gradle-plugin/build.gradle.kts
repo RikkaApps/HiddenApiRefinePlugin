@@ -1,6 +1,8 @@
 plugins {
     java
     `java-gradle-plugin`
+    `maven-publish`
+    signing
 }
 
 dependencies {
@@ -9,9 +11,9 @@ dependencies {
     implementation(project(":annotation"))
     implementation(project(":annotation-processor"))
 
-    compileOnly(deps.android.gradle)
-    implementation(deps.google.gson)
-    implementation(deps.javassist)
+    compileOnly(libs.android.gradle)
+    implementation(libs.google.gson)
+    implementation(libs.javassist)
 }
 
 gradlePlugin {
