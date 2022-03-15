@@ -31,19 +31,6 @@ The idea and the implementation is from [@Kr328](https://github.com/Kr328).
 
 Replace all the `<version>` below with the version shows here.
 
-### Add gradle plugin to root project
-
-```gradle
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'dev.rikka.tools.refine:gradle-plugin:<version>'
-    }
-}
-```
-
 ### Create "hidden-api" module
 
 1. Create a new Android library module
@@ -89,7 +76,7 @@ buildscript {
 
    ```gradle
    plugins {
-       id('dev.rikka.tools.refine.gradle-plugin')
+       id('dev.rikka.tools.refine') version '<version>'
    }
    ```
 
