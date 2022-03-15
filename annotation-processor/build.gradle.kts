@@ -1,12 +1,14 @@
 plugins {
     java
+    `maven-publish`
+    signing
 }
 
 dependencies {
     implementation(project(":annotation"))
 
-    annotationProcessor(deps.google.service.compiler)
+    annotationProcessor(libs.google.service.compiler)
 
-    implementation(deps.google.service.annotation)
-    implementation(deps.javassist)
+    implementation(libs.google.service.annotation)
+    implementation(libs.javassist)
 }
