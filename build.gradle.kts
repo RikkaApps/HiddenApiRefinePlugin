@@ -77,11 +77,8 @@ subprojects {
                         useGpgCmd()
 
                         val signingTasks = sign(extensions.getByType<PublishingExtension>().publications)
-
-                        afterEvaluate {
-                            tasks.withType(AbstractPublishToMaven::class) {
-                                dependsOn(signingTasks)
-                            }
+                        tasks.withType(AbstractPublishToMaven::class) {
+                            dependsOn(signingTasks)
                         }
                     }
                 }
