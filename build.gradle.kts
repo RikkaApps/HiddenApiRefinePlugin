@@ -63,9 +63,9 @@ subprojects {
             println("- Configure signing for module '${project.name}'")
 
             extensions.configure<SigningExtension> {
-                useGpgCmd()
-
                 if (findProperty("signing.gnupg.keyName") != null) {
+                    useGpgCmd()
+
                     val signingTasks = sign(publishing.publications)
 
                     afterEvaluate {
