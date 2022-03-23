@@ -24,3 +24,14 @@ gradlePlugin {
         }
     }
 }
+
+afterEvaluate {
+    publishing {
+        publications {
+            named("pluginMaven", MavenPublication::class) {
+                artifact(tasks["sourcesJar"])
+                artifact(tasks["javadocJar"])
+            }
+        }
+    }
+}
