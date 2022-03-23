@@ -69,10 +69,8 @@ subprojects {
                     val signingTasks = sign(publishing.publications)
 
                     afterEvaluate {
-                        tasks.forEach {
-                            if (it.name.startsWith("publish")) {
-                                it.dependsOn(signingTasks)
-                            }
+                        tasks.withType(AbstractPublishToMaven::class) {
+                            dependsOn(signingTasks)
                         }
                     }
                 }
