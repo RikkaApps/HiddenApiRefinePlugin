@@ -15,7 +15,7 @@ subprojects {
         }
         tasks.register("sourcesJar", type = Jar::class) {
             archiveClassifier.set("sources")
-            from(project.extensions.getByType(SourceSetContainer::class).getByName("main").allSource)
+            from(project.extensions.getByType<SourceSetContainer>().getByName("main").allSource)
         }
         tasks.register("javadocJar", type = Jar::class) {
             archiveClassifier.set("javadoc")
@@ -71,13 +71,12 @@ subprojects {
         plugins.withId("signing") {
             println("- Configure signing for module '${project.name}'")
 
-            val publishing = extensions.findByType(PublishingExtension::class)
-            if (publishing != null) {
+            afterEvaluate {
                 extensions.configure<SigningExtension> {
                     if (findProperty("signing.gnupg.keyName") != null) {
                         useGpgCmd()
 
-                        val signingTasks = sign(publishing.publications)
+                        val signingTasks = sign(extensions.getByType<PublishingExtension>().publications)
 
                         afterEvaluate {
                             tasks.withType(AbstractPublishToMaven::class) {
