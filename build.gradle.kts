@@ -7,7 +7,7 @@ subprojects {
     version = "3.1.0"
 
     plugins.withId("java") {
-        println("- Configure java for module ${project.name}")
+        println("- Configuring `java`")
 
         extensions.configure<JavaPluginExtension> {
             sourceCompatibility = JavaVersion.VERSION_11
@@ -26,7 +26,7 @@ subprojects {
         }
     }
     plugins.withId("maven-publish") {
-        println("- Configure publishing for module '${project.name}'")
+        println("- Configuring `publishing`")
 
         afterEvaluate {
             extensions.configure<PublishingExtension> {
@@ -69,7 +69,7 @@ subprojects {
             }
         }
         plugins.withId("signing") {
-            println("- Configure signing for module '${project.name}'")
+            println("- Configuring `signing`")
 
             afterEvaluate {
                 extensions.configure<SigningExtension> {
