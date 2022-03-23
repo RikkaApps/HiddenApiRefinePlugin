@@ -63,18 +63,18 @@ subprojects {
             println("- Configure signing for module '${project.name}'")
 
             extensions.configure<SigningExtension> {
-                val signingKey = findProperty("signingKey") as? String
-                val signingPassword = findProperty("signingPassword") as? String
-                val secretKeyRingFile = findProperty("signing.secretKeyRingFile") as? String
+                useGpgCmd()
 
-                if ((secretKeyRingFile != null && file(secretKeyRingFile).exists()) || signingKey != null) {
-                    if (signingKey != null) {
-                        useInMemoryPgpKeys(signingKey, signingPassword)
+                if (findProperty("signing.gnupg.keyName") != null) {
+                    val signingTasks = sign(publishing.publications)
+
+                    afterEvaluate {
+                        tasks.forEach {
+                            if (it.name.startsWith("publish")) {
+                                it.dependsOn(signingTasks)
+                            }
+                        }
                     }
-
-                    val task = sign(publishing.publications)
-
-                    tasks["publishMavenPublicationToOssrhRepository"].dependsOn(task)
                 }
             }
         }
@@ -88,3 +88,4 @@ subprojects {
         }
     }
 }
+
