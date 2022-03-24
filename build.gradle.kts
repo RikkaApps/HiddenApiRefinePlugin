@@ -37,7 +37,7 @@ subprojects {
 
                         pom {
                             name.set("HiddenApiRefine")
-                            description.set("HiddenApiRefine")
+                            description.set("A Gradle plugin that improves the experience when developing Android apps, especially system tools, that use hidden APIs.")
                             url.set("https://github.com/RikkaApps/HiddenApiRefinePlugin")
                             licenses {
                                 license {
@@ -56,14 +56,13 @@ subprojects {
                             }
                         }
                     }
-
-                    repositories {
-                        mavenLocal()
-                        maven {
-                            name = "ossrh"
-                            url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2")
-                            credentials(PasswordCredentials::class.java)
-                        }
+                }
+                repositories {
+                    mavenLocal()
+                    maven {
+                        name = "ossrh"
+                        url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2")
+                        credentials(PasswordCredentials::class.java)
                     }
                 }
             }
@@ -86,4 +85,3 @@ subprojects {
         }
     }
 }
-
