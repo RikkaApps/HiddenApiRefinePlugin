@@ -49,8 +49,6 @@ public class RefinePlugin implements Plugin<Project> {
                     "dev.rikka.tools.refine:compiler-plugin:" + RefinePlugin.class.getPackage().getImplementationVersion()
             );
 
-            System.out.println("dev.rikka.tools.refine:compiler-plugin:" + RefinePlugin.class.getPackage().getImplementationVersion());
-
             target.getTasks().withType(JavaCompile.class, this::decorateJavaCompile);
 
             target.getTasks().whenTaskAdded(task -> {
