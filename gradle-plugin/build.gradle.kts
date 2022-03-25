@@ -31,4 +31,10 @@ afterEvaluate {
             }
         }
     }
+
+    tasks.withType(Jar::class) {
+        manifest {
+            attributes(mapOf("Implementation-Version" to project.version.toString()))
+        }
+    }
 }

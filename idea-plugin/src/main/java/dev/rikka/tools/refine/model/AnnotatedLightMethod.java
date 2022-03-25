@@ -1,4 +1,4 @@
-package dev.rikka.tools.refine;
+package dev.rikka.tools.refine.model;
 
 import com.intellij.lang.Language;
 import com.intellij.psi.PsiClass;

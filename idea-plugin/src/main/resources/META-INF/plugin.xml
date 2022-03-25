@@ -11,7 +11,7 @@
     <depends>com.intellij.java</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <lang.psiAugmentProvider implementation="dev.rikka.tools.refine.RefineForPsiPlugin"/>
+        <lang.psiAugmentProvider implementation="dev.rikka.tools.refine.RefinePsiPlugin"/>
         <localInspection implementationClass="dev.rikka.tools.refine.UseRefinesInspectionPlugin"
                          displayName="Use refined without @UseRefines"
                          language="JAVA"

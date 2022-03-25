@@ -1,4 +1,4 @@
-package dev.rikka.tools.refine;
+package dev.rikka.tools.refine.model;
 
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiModifierListOwner;
@@ -9,9 +9,9 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 
 public class AnnotatedLightModifierList extends LightModifierList {
-    private final PsiAnnotation @NotNull []annotations;
+    private final PsiAnnotation @NotNull [] annotations;
 
-    public AnnotatedLightModifierList(PsiModifierListOwner modifierListOwner, PsiAnnotation @NotNull []annotations) {
+    public AnnotatedLightModifierList(PsiModifierListOwner modifierListOwner, PsiAnnotation @NotNull [] annotations) {
         super(modifierListOwner);
 
         this.annotations = annotations;
@@ -19,7 +19,7 @@ public class AnnotatedLightModifierList extends LightModifierList {
 
     @NotNull
     @Override
-    public PsiAnnotation @NotNull []getAnnotations() {
+    public PsiAnnotation @NotNull [] getAnnotations() {
         return annotations;
     }
 
