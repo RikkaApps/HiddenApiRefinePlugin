@@ -3,6 +3,7 @@ package dev.rikka.tools.refine;
 import com.intellij.lang.jvm.annotation.JvmAnnotationClassValue;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.util.Key;
+import com.intellij.openapi.util.ModificationTracker;
 import com.intellij.psi.*;
 import com.intellij.psi.augment.PsiAugmentProvider;
 import com.intellij.psi.impl.java.stubs.index.JavaAnnotationIndex;
@@ -64,7 +65,7 @@ public class RefinePsiPlugin extends PsiAugmentProvider {
             final PsiAnnotation result = PsiElementFactory.getInstance(clazz.getProject())
                     .createAnnotationFromText("@kotlin.Deprecated(message = \"HIDDEN\", level = kotlin.DeprecationLevel.HIDDEN)", clazz);
 
-            return CachedValueProvider.Result.create(result);
+            return CachedValueProvider.Result.create(result, ModificationTracker.NEVER_CHANGED);
         });
 
         final ArrayList<PsiElement> result = new ArrayList<>();
