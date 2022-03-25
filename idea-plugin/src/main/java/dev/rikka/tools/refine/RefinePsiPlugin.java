@@ -93,7 +93,9 @@ public class RefinePsiPlugin extends PsiAugmentProvider {
                                         refineClass,
                                         m.getLanguage(),
                                         createModifierList(m, kotlinHidden)
-                                )).collect(Collectors.toList());
+                                ))
+                                .peek(m -> m.putUserData(KEY_REFINE_CLASS_NAME, refineClass.getQualifiedName()))
+                                .collect(Collectors.toList());
                         return CachedValueProvider.Result.create(r, PsiModificationTracker.MODIFICATION_COUNT);
                     });
                     result.addAll(methods);
@@ -105,7 +107,9 @@ public class RefinePsiPlugin extends PsiAugmentProvider {
                                         f,
                                         refineClass,
                                         createModifierList(f, kotlinHidden)
-                                )).collect(Collectors.toList());
+                                ))
+                                .peek(m -> m.putUserData(KEY_REFINE_CLASS_NAME, refineClass.getQualifiedName()))
+                                .collect(Collectors.toList());
                         return CachedValueProvider.Result.create(r, PsiModificationTracker.MODIFICATION_COUNT);
                     });
                     result.addAll(fields);

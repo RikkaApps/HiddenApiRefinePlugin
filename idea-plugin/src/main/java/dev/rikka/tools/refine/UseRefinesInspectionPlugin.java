@@ -65,7 +65,7 @@ public class UseRefinesInspectionPlugin extends LocalInspectionTool {
                     final JavaResolveResult result = expression.advancedResolve(false);
                     final PsiElement element = result.getElement();
                     if (element != null) {
-                        String refineClass = element.getUserData(RefineForPsiPlugin.KEY_REFINE_CLASS_NAME);
+                        String refineClass = element.getUserData(RefinePsiPlugin.KEY_REFINE_CLASS_NAME);
                         if (refineClass != null && !useRefines.contains(refineClass)) {
                             final ProblemDescriptor problem = manager.createProblemDescriptor(
                                     expression,
