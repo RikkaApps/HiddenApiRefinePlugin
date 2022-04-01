@@ -31,6 +31,8 @@ afterEvaluate {
     publishing {
         publications {
             named("pluginMaven", MavenPublication::class) {
+                artifactId = project.name
+
                 artifact(tasks["sourcesJar"])
                 artifact(tasks["javadocJar"])
             }
