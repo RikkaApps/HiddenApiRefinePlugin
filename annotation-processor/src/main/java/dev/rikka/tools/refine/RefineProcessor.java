@@ -18,20 +18,22 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+// FIXME: comments fix
+
 /**
  * Annotation processor to generate metadata store classes.
  */
 @AutoService(Processor.class)
 public class RefineProcessor extends AbstractProcessor {
     /**
-     * Class name to store metadata.
+     * Class name suffix.
      */
     public static final String REFINE_METADATA_CLASS_NAME = String.valueOf(
             'R' << 16 | 'E' << 16 | 'F' << 8 | 'I' << 8 | 'N' | 'E'
     );
 
     /**
-     * Refine metadata key 'to'
+     * Annotation prefix that store refine to.
      */
     public static final String REFINE_NS_PACKAGE = "refine";
 
@@ -115,7 +117,7 @@ public class RefineProcessor extends AbstractProcessor {
     }
 
     /**
-     * Mark class as refine metadata classes.
+     * Mark class is a metadata class.
      */
     public @interface Descriptor {
     }

@@ -5,8 +5,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+// FIXME: comments fix
+
 /**
- * Refine to target class.
+ * Refine marked class to {@link #value()} referenced class.
  */
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.TYPE)

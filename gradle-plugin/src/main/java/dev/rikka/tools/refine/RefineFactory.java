@@ -10,7 +10,7 @@ import org.objectweb.asm.commons.ClassRemapper;
 import javax.annotation.Nonnull;
 
 /**
- * Factory to create refine class visitor.
+ * Factory to create classes refine visitor.
  */
 public abstract class RefineFactory implements AsmClassVisitorFactory<InstrumentationParameters> {
     @Override

@@ -9,14 +9,17 @@ import org.gradle.api.Project;
 
 import javax.annotation.Nonnull;
 
+// FIXME: comments fix
+
 /**
- * Gradle plugin to refine classes.
+ * Gradle plugin to register transformer.
  */
 @SuppressWarnings("unused")
 public class RefinePlugin implements Plugin<Project> {
     @Override
     public void apply(@Nonnull final Project target) {
         if (!target.getPlugins().hasPlugin("com.android.base")) {
+            // FIXME: message fix
             throw new GradleException("Must apply `com.android.application` or `com.android.library` plugin before");
         }
 
