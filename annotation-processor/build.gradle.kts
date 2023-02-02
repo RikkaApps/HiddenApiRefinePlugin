@@ -10,16 +10,13 @@ dependencies {
     annotationProcessor(libs.google.service.compiler)
 
     implementation(libs.google.service.annotation)
-    implementation(libs.javassist)
+    implementation(libs.asm.all)
 }
 
 publishing {
     publications {
         create(project.name, MavenPublication::class) {
             from(components["java"])
-
-            artifact(tasks["sourcesJar"])
-            artifact(tasks["javadocJar"])
         }
     }
 }

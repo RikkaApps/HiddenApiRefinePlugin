@@ -12,8 +12,7 @@ dependencies {
     implementation(project(":annotation-processor"))
 
     compileOnly(libs.android.gradle)
-    implementation(libs.google.gson)
-    implementation(libs.javassist)
+    implementation(libs.asm.all)
 }
 
 gradlePlugin {
@@ -32,9 +31,6 @@ afterEvaluate {
         publications {
             named("pluginMaven", MavenPublication::class) {
                 artifactId = project.name
-
-                artifact(tasks["sourcesJar"])
-                artifact(tasks["javadocJar"])
             }
         }
     }

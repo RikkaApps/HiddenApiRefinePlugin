@@ -20,16 +20,14 @@ dependencyResolutionManagement {
     }
     versionCatalogs {
         create("libs") {
-            val agp = "7.1.2"
-            val gson = "2.9.0"
+            val agp = "7.4.1"
             val service = "1.0.1"
-            val javassist = "3.28.0-GA"
+            val asm = "5.2"
 
-            library("android-gradle", "com.android.tools.build", "gradle").version(agp)
-            library("google-gson", "com.google.code.gson", "gson").version(gson)
-            library("google-service-compiler", "com.google.auto.service", "auto-service").version(service)
-            library("google-service-annotation", "com.google.auto.service", "auto-service-annotations").version(service)
-            library("javassist", "org.javassist", "javassist").version(javassist)
+            library("android-gradle", "com.android.tools.build:gradle:$agp")
+            library("google-service-compiler", "com.google.auto.service:auto-service:$service")
+            library("google-service-annotation", "com.google.auto.service:auto-service-annotations:$service")
+            library("asm-all", "org.ow2.asm:asm-all:$asm")
         }
     }
 }
