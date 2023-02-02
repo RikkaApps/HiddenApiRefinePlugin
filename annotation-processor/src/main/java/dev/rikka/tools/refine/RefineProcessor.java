@@ -109,7 +109,7 @@ public class RefineProcessor extends AbstractProcessor {
 
                 writeRefineMetadata(fromClass, toClass, element);
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new RuntimeException(e);
         }
 

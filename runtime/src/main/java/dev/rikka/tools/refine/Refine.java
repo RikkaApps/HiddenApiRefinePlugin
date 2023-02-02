@@ -14,7 +14,7 @@ public final class Refine {
      * @return object with target type
      */
     @SuppressWarnings("unchecked")
-    public static <T> T unsafeCast(Object obj) {
+    public static <T> T unsafeCast(final Object obj) {
         return (T) obj;
     }
 }

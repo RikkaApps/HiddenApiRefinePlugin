@@ -7,12 +7,12 @@ import org.objectweb.asm.commons.Remapper;
 class RefineRemapper extends Remapper {
     private final ClassContext context;
 
-    public RefineRemapper(ClassContext context) {
+    public RefineRemapper(final ClassContext context) {
         this.context = context;
     }
 
     @Override
-    public String map(String typeName) {
+    public String map(final String typeName) {
         final ClassData data = context.loadClassData(typeName.replace('/', '.') + "$" + RefineProcessor.REFINE_METADATA_CLASS_NAME);
         if (data == null) {
             return typeName;
