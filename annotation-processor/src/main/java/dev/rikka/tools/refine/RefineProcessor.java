@@ -1,58 +1,38 @@
 package dev.rikka.tools.refine;
 
 import com.google.auto.service.AutoService;
-import javassist.bytecode.AnnotationsAttribute;
-import javassist.bytecode.ClassFile;
-import javassist.bytecode.annotation.Annotation;
-import javassist.bytecode.annotation.ClassMemberValue;
+import org.objectweb.asm.AnnotationVisitor;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.PackageElement;
-import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.*;
 import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.MirroredTypeException;
 import javax.tools.FileObject;
-import javax.tools.StandardLocation;
-import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
+/**
+ * Annotation processor that generates classes which store metadata.
+ */
 @AutoService(Processor.class)
 public class RefineProcessor extends AbstractProcessor {
-    public @interface Descriptor {}
+    /**
+     * Class name suffix.
+     */
+    public static final String REFINE_METADATA_CLASS_NAME = String.valueOf(
+            'R' << 16 | 'E' << 16 | 'F' << 8 | 'I' << 8 | 'N' | 'E'
+    );
 
-    public static final String DESCRIPTOR_REFINE_DESCRIPTOR = Descriptor.class.getName();
-    public static final String DESCRIPTOR_REFINE_FROM = "from";
-    public static final String DESCRIPTOR_REFINE_TO = "to";
-
-    private static final String REFINE_DESCRIPTION_SUFFIX = String.valueOf('R' << 16 | 'E' << 16 | 'F' << 8 | 'I' << 8 | 'N' | 'E');
-
-    private static String resolveInternalName(Element element) {
-        final Element enclosing = element.getEnclosingElement();
-
-        if (enclosing instanceof TypeElement) {
-            return resolveInternalName(enclosing) + "$" + element.getSimpleName();
-        } else if (enclosing instanceof PackageElement) {
-            return ((PackageElement) enclosing).getQualifiedName().toString()
-                    .replace('.', '/') + "/" + element.getSimpleName();
-        }
-
-        return element.getSimpleName().toString();
-    }
-
-    private static String resolveClassNameFromRefine(RefineAs refine) {
-        try {
-            return refine.value().getName();
-        } catch (MirroredTypeException e) {
-            return resolveInternalName(((DeclaredType) e.getTypeMirror()).asElement());
-        }
-    }
+    /**
+     * Annotation prefix that store refine to.
+     */
+    public static final String REFINE_NS_PACKAGE = "refine";
 
     @Override
     public Set<String> getSupportedAnnotationTypes() {
@@ -64,94 +44,121 @@ public class RefineProcessor extends AbstractProcessor {
         return SourceVersion.RELEASE_8;
     }
 
+    private static String resolveClassName(final Element element) {
+        final Element enclosing = element.getEnclosingElement();
+
+        if (enclosing instanceof TypeElement) {
+            return resolveClassName(enclosing) + "$" + element.getSimpleName();
+        } else if (enclosing instanceof PackageElement) {
+            return ((PackageElement) enclosing).getQualifiedName()+ "." + element.getSimpleName();
+        }
+
+        return element.getSimpleName().toString();
+    }
+
+    private void writeRefineMetadata(final String from, final String to, final Element... dependencies) throws IOException {
+        final String metadataName = from + "$" + REFINE_METADATA_CLASS_NAME;
+        final String refineToAnnotation = REFINE_NS_PACKAGE + "." + to;
+
+        final ClassWriter metadataWriter = new ClassWriter(0);
+        metadataWriter.visit(
+                Opcodes.V1_8,
+                Opcodes.ACC_FINAL | Opcodes.ACC_PUBLIC | Opcodes.ACC_SUPER,
+                metadataName.replace('.', '/'),
+                null,
+                Type.getInternalName(Object.class),
+                null
+        );
+
+        final AnnotationVisitor descriptor = metadataWriter.visitAnnotation(Type.getDescriptor(Descriptor.class), false);
+        descriptor.visit("from", Type.getType("L" + from.replace('.', '/') + ';'));
+        descriptor.visit("to", Type.getType("L" + to.replace('.', '/') + ";"));
+        descriptor.visitEnd();
+
+        metadataWriter.visitAnnotation("L" + refineToAnnotation.replace('.', '/') + ";", false).visitEnd();
+        metadataWriter.visitEnd();
+
+        final FileObject metadataFile = processingEnv.getFiler().createClassFile(metadataName, dependencies);
+        try (final OutputStream stream = metadataFile.openOutputStream()) {
+            stream.write(metadataWriter.toByteArray());
+        }
+
+        if (processingEnv.getElementUtils().getTypeElement(to.replace('$', '.')) == null) {
+            final ClassWriter stubWriter = new ClassWriter(0);
+            stubWriter.visit(
+                    Opcodes.V1_8,
+                    Opcodes.ACC_FINAL | Opcodes.ACC_PUBLIC | Opcodes.ACC_SUPER,
+                    to.replace('.', '/'),
+                    null,
+                    Type.getInternalName(Object.class),
+                    null
+            );
+            stubWriter.visitEnd();
+
+            final FileObject stubFile = processingEnv.getFiler().createClassFile(to, dependencies);
+            try (final OutputStream stream = stubFile.openOutputStream()) {
+                stream.write(stubWriter.toByteArray());
+            }
+        }
+    }
+
+    private void processElement(final TypeElement element, final String toClass) throws IOException {
+        final String fromClass = resolveClassName(element);
+
+        writeRefineMetadata(fromClass, toClass, element);
+
+        for (final Element enclosedElement : element.getEnclosedElements()) {
+            if (!(enclosedElement instanceof TypeElement)) {
+                continue;
+            }
+
+            if (enclosedElement.getAnnotation(RefineAs.class) != null) {
+                continue;
+            }
+
+            processElement((TypeElement) enclosedElement, toClass + "$" + enclosedElement.getSimpleName());
+        }
+    }
+
     @Override
-    public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+    public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
         try {
-            for (final Element element : roundEnv.getElementsAnnotatedWith(RefineAs.class)) {
+            final TypeElement eRefineAs = processingEnv.getElementUtils().getTypeElement(RefineAs.class.getName());
+            final ExecutableElement eRefineAsValue = (ExecutableElement) eRefineAs.getEnclosedElements().stream()
+                    .filter(e -> (e instanceof ExecutableElement) && e.getSimpleName().contentEquals("value"))
+                    .findAny()
+                    .orElseThrow(() -> new IllegalStateException("Invalid @RefineAs annotation."));
+
+            for (final Element element : roundEnv.getElementsAnnotatedWith(eRefineAs)) {
                 if (!(element instanceof TypeElement)) {
                     continue;
                 }
 
-                final RefineAs refine = element.getAnnotation(RefineAs.class);
-                if (refine == null) {
+                final AnnotationMirror refineAs = element.getAnnotationMirrors().stream()
+                        .filter(a -> eRefineAs.equals(a.getAnnotationType().asElement()))
+                        .findAny()
+                        .orElse(null);
+                if (refineAs == null) {
                     continue;
                 }
 
-                final String original = resolveInternalName(element);
-                final String replaced = resolveClassNameFromRefine(refine);
+                final AnnotationValue refineAsValue = refineAs.getElementValues().get(eRefineAsValue);
+                if (refineAsValue == null) {
+                    continue;
+                }
 
-                processType((TypeElement) element, element, original, replaced);
+                processElement((TypeElement) element, resolveClassName(((DeclaredType) refineAsValue.getValue()).asElement()));
             }
-        } catch (IOException e) {
+        } catch (final Exception e) {
             throw new RuntimeException(e);
         }
 
         return true;
     }
 
-    private void processType(TypeElement type, Element root, String prefix, String replace) throws IOException {
-        final String sourceInternalName = resolveInternalName(type);
-
-        if (!sourceInternalName.startsWith(prefix)) {
-            return;
-        }
-
-        final String[] sourceFragments = sourceInternalName.split("/");
-        final String sourcePackageName = Stream.of(sourceFragments)
-                .limit(sourceFragments.length - 1)
-                .collect(Collectors.joining("."));
-        final String sourceClassName = sourceFragments[sourceFragments.length - 1];
-
-        final String descriptionName = sourceClassName + "$" + REFINE_DESCRIPTION_SUFFIX;
-        final String descriptionInternalName = sourcePackageName.replace('.', '/') + "/" + descriptionName;
-
-        final FileObject refineFile = processingEnv.getFiler()
-                .createResource(StandardLocation.CLASS_OUTPUT, sourcePackageName, descriptionName + ".class", type, root);
-
-        final String targetInternalName = replace + sourceInternalName.substring(prefix.length());
-
-        try (DataOutputStream stream = new DataOutputStream(refineFile.openOutputStream())) {
-            final ClassFile cls = new ClassFile(true, descriptionInternalName, null);
-            final AnnotationsAttribute annotations = new AnnotationsAttribute(cls.getConstPool(), AnnotationsAttribute.invisibleTag);
-            final Annotation annotation = new Annotation(DESCRIPTOR_REFINE_DESCRIPTOR, cls.getConstPool());
-
-            annotation.addMemberValue(DESCRIPTOR_REFINE_FROM, new ClassMemberValue(sourceInternalName, cls.getConstPool()));
-            annotation.addMemberValue(DESCRIPTOR_REFINE_TO, new ClassMemberValue(targetInternalName, cls.getConstPool()));
-
-            annotations.addAnnotation(annotation);
-
-            cls.addAttribute(annotations);
-
-            cls.write(stream);
-        }
-
-        final String[] targetFragments = targetInternalName.split("/");
-        final String targetPackageName = Stream.of(targetFragments)
-                .limit(sourceFragments.length - 1)
-                .collect(Collectors.joining("."));
-        final String targetClassName = targetFragments[targetFragments.length - 1];
-
-        final TypeElement target = processingEnv.getElementUtils()
-                .getTypeElement(targetPackageName + "." + targetClassName.replace('$', '.'));
-        if (target == null) {
-            final FileObject classFile = processingEnv.getFiler()
-                    .createResource(StandardLocation.CLASS_OUTPUT, targetPackageName, targetClassName + ".class", type, root);
-
-            try (DataOutputStream stream = new DataOutputStream(classFile.openOutputStream())) {
-                new ClassFile(type.getKind().isInterface(), targetInternalName, null).write(stream);
-            }
-        }
-
-        for (final Element enclosed : type.getEnclosedElements()) {
-            if (!(enclosed instanceof TypeElement)) {
-                continue;
-            }
-
-            if (enclosed.getAnnotation(RefineAs.class) != null || enclosed.getAnnotation(Descriptor.class) != null) {
-                continue;
-            }
-
-            processType((TypeElement) enclosed, root, prefix, replace);
-        }
+    /**
+     * Mark class is a metadata class.
+     */
+    public @interface Descriptor {
     }
 }

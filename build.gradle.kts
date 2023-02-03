@@ -4,30 +4,18 @@ task("clean", type = Delete::class) {
 
 subprojects {
     group = "dev.rikka.tools.refine"
-    version = "3.1.1"
+    version = "4.0.0"
 
     plugins.withId("java") {
-        println("- Configuring `java`")
-
         extensions.configure<JavaPluginExtension> {
             sourceCompatibility = JavaVersion.VERSION_11
             targetCompatibility = JavaVersion.VERSION_11
-        }
-        tasks.register("sourcesJar", type = Jar::class) {
-            archiveClassifier.set("sources")
-            from(project.extensions.getByType<SourceSetContainer>().getByName("main").allSource)
-        }
-        tasks.register("javadocJar", type = Jar::class) {
-            archiveClassifier.set("javadoc")
-            from(tasks["javadoc"])
-        }
-        tasks.withType(Javadoc::class) {
-            isFailOnError = false
+
+            withSourcesJar()
+            withJavadocJar()
         }
     }
     plugins.withId("maven-publish") {
-        println("- Configuring `publishing`")
-
         extensions.configure<PublishingExtension> {
             publications {
                 withType(MavenPublication::class) {
@@ -66,8 +54,6 @@ subprojects {
             }
         }
         plugins.withId("signing") {
-            println("- Configuring `signing`")
-
             extensions.configure<SigningExtension> {
                 if (findProperty("signing.gnupg.keyName") != null) {
                     useGpgCmd()
