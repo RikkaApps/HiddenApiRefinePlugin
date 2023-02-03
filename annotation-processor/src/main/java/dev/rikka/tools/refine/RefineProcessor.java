@@ -17,10 +17,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Set;
 
-// FIXME: comments fix
-
 /**
- * Annotation processor to generate metadata store classes.
+ * Annotation processor that generates classes which store metadata.
  */
 @AutoService(Processor.class)
 public class RefineProcessor extends AbstractProcessor {

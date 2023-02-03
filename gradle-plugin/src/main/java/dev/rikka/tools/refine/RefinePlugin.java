@@ -9,18 +9,15 @@ import org.gradle.api.Project;
 
 import javax.annotation.Nonnull;
 
-// FIXME: comments fix
-
 /**
- * Gradle plugin to register transformer.
+ * Gradle plugin that do the class rename works.
  */
 @SuppressWarnings("unused")
 public class RefinePlugin implements Plugin<Project> {
     @Override
     public void apply(@Nonnull final Project target) {
         if (!target.getPlugins().hasPlugin("com.android.base")) {
-            // FIXME: message fix
-            throw new GradleException("Must apply `com.android.application` or `com.android.library` plugin before");
+            throw new GradleException("This plugin must be applied after `com.android.application` or `com.android.library`.");
         }
 
         final AndroidComponentsExtension<?, ?, ?> components = target.getExtensions().getByType(AndroidComponentsExtension.class);

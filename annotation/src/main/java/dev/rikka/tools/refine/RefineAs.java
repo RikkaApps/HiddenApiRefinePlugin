@@ -5,16 +5,14 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-// FIXME: comments fix
-
 /**
- * Refine marked class to {@link #value()} referenced class.
+ * Attach this annotation to a class to indicate that this class should be renamed to {@link #value()}.
  */
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.TYPE)
 public @interface RefineAs {
     /**
-     * @return target class
+     * Class to rename to.
      */
     Class<?> value();
 }
