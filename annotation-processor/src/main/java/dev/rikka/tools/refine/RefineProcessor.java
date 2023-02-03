@@ -10,12 +10,10 @@ import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.*;
+import javax.lang.model.type.DeclaredType;
 import javax.tools.FileObject;
-import javax.tools.StandardLocation;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 
 // FIXME: comments fix
@@ -47,12 +45,24 @@ public class RefineProcessor extends AbstractProcessor {
         return SourceVersion.RELEASE_8;
     }
 
+    private static String resolveClassName(final Element element) {
+        final Element enclosing = element.getEnclosingElement();
+
+        if (enclosing instanceof TypeElement) {
+            return resolveClassName(enclosing) + "$" + element.getSimpleName();
+        } else if (enclosing instanceof PackageElement) {
+            return ((PackageElement) enclosing).getQualifiedName()+ "." + element.getSimpleName();
+        }
+
+        return element.getSimpleName().toString();
+    }
+
     private void writeRefineMetadata(final String from, final String to, final Element... dependencies) throws IOException {
         final String metadataName = from + "$" + REFINE_METADATA_CLASS_NAME;
         final String refineToAnnotation = REFINE_NS_PACKAGE + "." + to;
 
-        final ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
-        writer.visit(
+        final ClassWriter metadataWriter = new ClassWriter(0);
+        metadataWriter.visit(
                 Opcodes.V1_8,
                 Opcodes.ACC_FINAL | Opcodes.ACC_PUBLIC | Opcodes.ACC_SUPER,
                 metadataName.replace('.', '/'),
@@ -60,20 +70,49 @@ public class RefineProcessor extends AbstractProcessor {
                 Type.getInternalName(Object.class),
                 null
         );
-        writer.visitAnnotation(Type.getDescriptor(Descriptor.class), false).visitEnd();
-        writer.visitAnnotation("L" + refineToAnnotation.replace('.', '/') + ";", false).visitEnd();
-        writer.visitEnd();
+        metadataWriter.visitAnnotation(Type.getDescriptor(Descriptor.class), false).visitEnd();
+        metadataWriter.visitAnnotation("L" + refineToAnnotation.replace('.', '/') + ";", false).visitEnd();
+        metadataWriter.visitEnd();
 
-        final List<String> fromSegments = Arrays.asList(metadataName.split("\\."));
-        final FileObject classFile = processingEnv.getFiler().createResource(
-                StandardLocation.CLASS_OUTPUT,
-                String.join(".", fromSegments.subList(0, fromSegments.size() - 1)),
-                fromSegments.get(fromSegments.size() - 1) + ".class",
-                dependencies
-        );
+        final FileObject metadataFile = processingEnv.getFiler().createClassFile(metadataName, dependencies);
+        try (final OutputStream stream = metadataFile.openOutputStream()) {
+            stream.write(metadataWriter.toByteArray());
+        }
 
-        try (final OutputStream stream = classFile.openOutputStream()) {
-            stream.write(writer.toByteArray());
+        if (processingEnv.getElementUtils().getTypeElement(to.replace('$', '.')) == null) {
+            final ClassWriter stubWriter = new ClassWriter(0);
+            stubWriter.visit(
+                    Opcodes.V1_8,
+                    Opcodes.ACC_FINAL | Opcodes.ACC_PUBLIC | Opcodes.ACC_SUPER,
+                    to.replace('.', '/'),
+                    null,
+                    Type.getInternalName(Object.class),
+                    null
+            );
+            stubWriter.visitEnd();
+
+            final FileObject stubFile = processingEnv.getFiler().createClassFile(to, dependencies);
+            try (final OutputStream stream = stubFile.openOutputStream()) {
+                stream.write(stubWriter.toByteArray());
+            }
+        }
+    }
+
+    private void processElement(final TypeElement element, final String toClass) throws IOException {
+        final String fromClass = resolveClassName(element);
+
+        writeRefineMetadata(fromClass, toClass, element);
+
+        for (final Element enclosedElement : element.getEnclosedElements()) {
+            if (!(enclosedElement instanceof TypeElement)) {
+                continue;
+            }
+
+            if (enclosedElement.getAnnotation(RefineAs.class) != null) {
+                continue;
+            }
+
+            processElement((TypeElement) enclosedElement, toClass + "$" + enclosedElement.getSimpleName());
         }
     }
 
@@ -104,10 +143,7 @@ public class RefineProcessor extends AbstractProcessor {
                     continue;
                 }
 
-                final String fromClass = ((TypeElement) element).getQualifiedName().toString();
-                final String toClass = refineAsValue.getValue().toString();
-
-                writeRefineMetadata(fromClass, toClass, element);
+                processElement((TypeElement) element, resolveClassName(((DeclaredType) refineAsValue.getValue()).asElement()));
             }
         } catch (final Exception e) {
             throw new RuntimeException(e);
