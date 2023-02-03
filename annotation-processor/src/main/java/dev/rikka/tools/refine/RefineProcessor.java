@@ -1,6 +1,7 @@
 package dev.rikka.tools.refine;
 
 import com.google.auto.service.AutoService;
+import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -70,7 +71,12 @@ public class RefineProcessor extends AbstractProcessor {
                 Type.getInternalName(Object.class),
                 null
         );
-        metadataWriter.visitAnnotation(Type.getDescriptor(Descriptor.class), false).visitEnd();
+
+        final AnnotationVisitor descriptor = metadataWriter.visitAnnotation(Type.getDescriptor(Descriptor.class), false);
+        descriptor.visit("from", Type.getType("L" + from.replace('.', '/') + ';'));
+        descriptor.visit("to", Type.getType("L" + to.replace('.', '/') + ";"));
+        descriptor.visitEnd();
+
         metadataWriter.visitAnnotation("L" + refineToAnnotation.replace('.', '/') + ";", false).visitEnd();
         metadataWriter.visitEnd();
 
