@@ -11,8 +11,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.TYPE)
 public @interface RefineAs {
+
     /**
-     * Class to rename to.
+     * @return Class to rename to.
      */
     Class<?> value();
 }

@@ -63,7 +63,7 @@ public class RefineProcessor extends AbstractProcessor {
         final ClassWriter metadataWriter = new ClassWriter(0);
         metadataWriter.visit(
                 Opcodes.V1_8,
-                Opcodes.ACC_FINAL | Opcodes.ACC_PUBLIC | Opcodes.ACC_SUPER,
+                Opcodes.ACC_FINAL | Opcodes.ACC_PRIVATE | Opcodes.ACC_SUPER,
                 metadataName.replace('.', '/'),
                 null,
                 Type.getInternalName(Object.class),
