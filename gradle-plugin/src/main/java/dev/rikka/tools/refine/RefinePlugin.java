@@ -24,7 +24,7 @@ public class RefinePlugin implements Plugin<Project> {
 
         final AndroidComponentsExtension<?, ?, ?> components = target.getExtensions().getByType(AndroidComponentsExtension.class);
         components.onVariants(components.selector().all(), variant -> {
-            for (Component component : variant.getComponents()) {
+            for (final Component component : variant.getComponents()) {
                 component.getInstrumentation().transformClassesWith(
                         RefineFactory.class,
                         InstrumentationScope.ALL,
