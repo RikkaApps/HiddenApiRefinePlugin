@@ -3,7 +3,6 @@ package dev.rikka.tools.refine;
 import com.android.build.api.instrumentation.InstrumentationScope;
 import com.android.build.api.variant.AndroidComponentsExtension;
 import com.android.build.api.variant.Component;
-
 import kotlin.Unit;
 import org.gradle.api.GradleException;
 import org.gradle.api.Plugin;
@@ -23,11 +22,12 @@ public class RefinePlugin implements Plugin<Project> {
         }
 
         final AndroidComponentsExtension<?, ?, ?> components = target.getExtensions().getByType(AndroidComponentsExtension.class);
+        boolean isLibrary = components instanceof com.android.build.api.variant.LibraryAndroidComponentsExtension;
         components.onVariants(components.selector().all(), variant -> {
             for (final Component component : variant.getComponents()) {
                 component.getInstrumentation().transformClassesWith(
                         RefineFactory.class,
-                        InstrumentationScope.ALL,
+                        isLibrary ? InstrumentationScope.PROJECT : InstrumentationScope.ALL,
                         (parameters) -> Unit.INSTANCE
                 );
             }
