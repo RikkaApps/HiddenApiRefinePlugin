@@ -8,7 +8,7 @@ When developing system tools, it's inevitable to use hidden APIs. There are two 
 
 In short, the linking way is to create Java-only modules with stub classes and then `compileOnly` them in the main Android modules. This is the same as what Android SDK's `android.jar` does.
 
-However the linking way, or "the stub way", have some problems:
+However, the linking way, or "the stub way", have some problems:
 
 1. "Bridge classes" is required if only some members of the class are hidden.
 2. Kotlin will try to link public classes from the stub module, `implementation` a second Java-only which `compileOnly` the stub module can workaround the problem.
@@ -74,15 +74,28 @@ Replace all the `<version>` below with the version shows here.
 
 1. Apply this plugin in the final Android application module
 
-   ```gradle
+   ```groovy
    plugins {
        id('dev.rikka.tools.refine') version '<version>'
    }
    ```
+   
+   If your project includes mulitple modules, you need to apply this plugin to all the module that uses hidden APIs.
+   
+   There is a convenient way to do this, add this to your root `build.gradle`:
+
+   ```groovy
+   subprojects {
+       plugins.withId("com.android.base") {
+           plugins.apply('dev.rikka.tools.refine')
+       }
+   }
+   ```
+
 
 2. Import "hidden-api" module with `compileOnly`
 
-   ```gradle
+   ```groovy
    dependencies {
        compileOnly project(':hidden-api')
    }
