@@ -20,14 +20,14 @@ dependencyResolutionManagement {
     }
     versionCatalogs {
         create("libs") {
-            val agp = "7.4.1"
-            val service = "1.0.1"
-            val asm = "5.2"
+            val agp = "8.1.2"
+            val service = "1.1.1"
+            val asm = "9.6"
 
             library("android-gradle", "com.android.tools.build:gradle:$agp")
             library("google-service-compiler", "com.google.auto.service:auto-service:$service")
             library("google-service-annotation", "com.google.auto.service:auto-service-annotations:$service")
-            library("asm-all", "org.ow2.asm:asm-all:$asm")
+            library("asm-all", "org.ow2.asm:asm-commons:$asm")
         }
     }
 }

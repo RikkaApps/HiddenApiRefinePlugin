@@ -1,5 +1,5 @@
 task("clean", type = Delete::class) {
-    delete(buildDir)
+    delete(layout.buildDirectory)
 }
 
 subprojects {
