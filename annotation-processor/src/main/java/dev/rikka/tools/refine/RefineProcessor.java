@@ -48,7 +48,7 @@ public class RefineProcessor extends AbstractProcessor {
 
     @Override
     public SourceVersion getSupportedSourceVersion() {
-        return SourceVersion.RELEASE_17;
+        return SourceVersion.RELEASE_11;
     }
 
     private static String resolveClassName(final Element element) {
