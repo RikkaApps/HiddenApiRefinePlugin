@@ -16,7 +16,7 @@ public abstract class RefineFactory implements AsmClassVisitorFactory<Instrument
     @Override
     @Nonnull
     public ClassVisitor createClassVisitor(final @Nonnull ClassContext classContext, final @Nonnull ClassVisitor classVisitor) {
-        return new ClassRemapper(classVisitor, new RefineRemapper(classContext));
+        return new ClassRemapper(getInstrumentationContext().getApiVersion().get(), classVisitor, new RefineRemapper(classContext)) {};
     }
 
     @Override

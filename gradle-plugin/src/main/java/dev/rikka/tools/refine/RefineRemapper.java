@@ -29,4 +29,15 @@ class RefineRemapper extends Remapper {
 
         return typeName;
     }
+
+    @Override
+    public String mapInnerClassName(String name, String ownerName, String innerName) {
+        final String result = super.mapInnerClassName(name, ownerName, innerName);
+
+        if (innerName.startsWith("$") && !result.startsWith("$")) {
+            return "$" + result;
+        }
+
+        return result;
+    }
 }
